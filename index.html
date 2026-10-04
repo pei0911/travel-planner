@@ -109,8 +109,58 @@ function backPage(){tab=pageHistory.pop()||'more';render();window.scrollTo({top:
 function pageBack(){return '<div class="page-back no-print"><button data-action="back-page">‹ 回到前一頁</button></div>'}
 function dayPicker(){return `<div class="day-picker"><button data-action="prev-day" aria-label="前一天" ${dayIndex===0?'disabled':''}>‹</button><select aria-label="選擇日期" data-select-day>${state.days.map((d,i)=>`<option value="${i}" ${i===dayIndex?'selected':''}>DAY ${i+1} · ${esc(d.date.slice(5).replace('-','/'))} · ${esc(d.title)}</option>`).join('')}</select><button data-action="next-day" aria-label="後一天" ${dayIndex===state.days.length-1?'disabled':''}>›</button></div>`}
 function render(){if(!ghReady||!ghToken){document.title='私人旅程手帖';$('#tripName').textContent='私人旅程手帖';$('#tripMeta').textContent='授權後讀取私人行程';$('#nav').innerHTML='';$('#main').innerHTML=ghBanner()+githubSettings();autoSize();return}active();document.title=state.name+'｜旅程手帖';$('#tripName').textContent=state.name;$('#tripMeta').textContent=state.destination||'我的旅程';$('#nav').innerHTML=tabs.map(([id,icon,name])=>`<button data-tab="${id}" class="${id===tab||id==='lists'&&['luggage','todo'].includes(tab)||id==='more'&&['github','flights','refs','backup','journeys','trip'].includes(tab)?'active':''}"><span>${icon}</span>${name}</button>`).join('');$('#main').innerHTML=ghBanner()+(['github','flights','refs','backup','journeys','trip'].includes(tab)?pageBack():'')+({trip,schedule,info,lists:lists,luggage:()=>checklist('luggage'),todo:()=>checklist('todo'),more,github:githubSettings,flights,refs,book,backup,journeys}[tab]||book)();autoSize();ghReadOnly();if(tab==='schedule')requestAnimationFrame(layoutSchedules)}
-function cleanTransitLine(s){return String(s).replace(/\[[^\]]+\]\([^)]*\)/g,'').replace(/https?:\/\/\S+/g,'').replace(/\s+/g,' ').trim()}
-function summarizeGoogleTransit(raw){let lines=String(raw).split(/\n+/).map(cleanTransitLine).filter(Boolean);lines=lines.map(x=>x.replace(/\s*[·・]\s*\d+\s*號月台.*$/,'').replace(/\s*[·・]\s*車站 ID.*$/,'').trim()).filter(x=>x&&!/^id=/.test(x)&&!(/^(上午|下午)?\s*\d{1,2}:\d{2}$/.test(x))&&!/^日本(?:〒|\s|$)/.test(x)&&!/^〒\d/.test(x));const parts=[];let total=0;for(let i=0;i<lines.length;i++){const line=lines[i];const walk=/(?:步行|走路)[^\d]*(\d+)\s*分(?:[^\d]*(\d+(?:\.\d+)?)\s*(m|公尺|米|km|公里))?/i.exec(line);if(walk){const mins=Number(walk[1]);total+=mins;parts.push(`走路${mins}分${walk[2]?`(${walk[2]}${/km|公里/i.test(walk[3])?'km':'m'})`:''}`);continue}const dur=/(\d+)\s*分(?:\s*\((\d+)\s*站\s*\))?/.exec(line);if(dur){const mins=Number(dur[1]);total+=mins;let route=line.replace(/\s*[·・]\s*.*$/,'').replace(/(\d+)\s*分.*$/,'').trim();let from='',to='';for(let j=i-1;j>=0;j--){if(!/分|站|電車|線|巴士|公車|快速|特急|急行|普通/.test(lines[j])){from=lines[j].replace(/駅$/,'');break}}for(let j=i+1;j<lines.length;j++){if(!/分|站|電車|線|巴士|公車|快速|特急|急行|普通/.test(lines[j])){to=lines[j].replace(/駅$/,'');break}}if(!route&&i>0&&/線|電車|巴士|公車|特急|快速|急行/.test(lines[i-1]))route=lines[i-1];route=route.replace(/^(火車|電車|巴士|公車)\s*/,'').replace(/(.+?線)\1/,'$1').replace(/電車(?=[^電車]*$)/,'').trim();let label=route||'大眾運輸';parts.push(`${label}${from&&to?`：${from}-${to}`:''}${mins}分${dur[2]?`(${dur[2]}站)`:''}`)}}if(!parts.length)return '';return parts.join('，')+`，共約${total}分`}
+function cleanTransitLine(s){return String(s).replace(/\*\*/g,'').replace(/^#{1,6}\s*/,'').replace(/\[([^\]]+)\]\([^)]*\)/g,'$1').replace(/https?:\/\/\S+/g,'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').trim()}
+function summarizeGoogleTransit(raw){
+ const original=String(raw||'').replace(/\r/g,'');
+ let lines=original.split(/\n+/).map(cleanTransitLine).filter(Boolean);
+ lines=lines.filter(x=>!/^id=[\w-]+$/i.test(x)&&!(/^(上午|下午)?\s*\d{1,2}:\d{2}$/.test(x))&&!/^[-–—]+$/.test(x)&&!/^日本(?:〒|\s|$)/.test(x)&&!/^〒\d/.test(x));
+ const modes='火車|電車|地鐵|捷運|巴士|公車|步行|走路|開車|汽車|計程車';
+ const isMode=x=>new RegExp(`^(?:${modes})$`).test(x);
+ const isAddress=x=>/^(?:日本)?〒?\d{3}-?\d{4}\b/.test(x)||/\b(?:Japan|Osaka|Kyoto|Tokyo)\b.*\d/i.test(x);
+ const normalizeTransitNums=x=>String(x||'').replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/／/g,'/');
+ const timeInfo=x=>{const z=normalizeTransitNums(x);const mins=z.match(/(?:約\s*)?(\d+)\s*分(?:鐘)?/),stops=z.match(/[（(]\s*(\d+)\s*站\s*[)）]/);return mins?{mins:Number(mins[1]),stops:stops?Number(stops[1]):null}:null};
+ const platformInfo=x=>{const z=normalizeTransitNums(x);const m=z.match(/(\d+(?:\s*\/\s*\d+)*)\s*(?:號月台|番線)/);return m?m[1].replace(/\s/g,''):''};
+ const distanceInfo=x=>{const m=String(x).match(/(\d+(?:[.,]\d+)?)\s*(公尺|米|m|公里|km)(?![A-Za-z])/i);if(!m)return '';const unit=/公里|km/i.test(m[2])?'公里':'公尺';return `${m[1].replace(',','')}${unit}`};
+ const splitInline=x=>{const m=String(x).match(new RegExp(`^(${modes})(.+)$`));return m?{mode:m[1],rest:m[2].trim()}:null};
+ const formatRoute=route=>{route=String(route||'').replace(new RegExp(`^(?:${modes})\\s*`),'').replace(/\s+/g,' ').trim();if(!route)return '';return route.replace(/^(.+?線)(.+)$/,(m,line,rest)=>`${line}：${rest.trim()}`)};
+ const parts=[];let total=0;
+ for(let i=0;i<lines.length;i++){
+   let mode=lines[i],inline=splitInline(mode),inlineRest='';
+   if(inline){mode=inline.mode;inlineRest=inline.rest}
+   if(!isMode(mode))continue;
+   if(/^(步行|走路)$/.test(mode)){
+     let detail=timeInfo(inlineRest)?inlineRest:'';
+     if(!detail)for(let j=i+1;j<Math.min(lines.length,i+5);j++){if(isMode(lines[j])||splitInline(lines[j]))break;if(timeInfo(lines[j])){detail=lines[j];break}}
+     const t=timeInfo(detail);if(t){total+=t.mins;const dist=distanceInfo(detail);parts.push(`走路${t.mins}分${dist?`(${dist})`:''}`)}
+     continue;
+   }
+   if(/^(火車|電車|地鐵|捷運|巴士|公車)$/.test(mode)){
+     let route='',detail='';
+     if(inlineRest){const ti=timeInfo(inlineRest);if(ti){detail=inlineRest;route=inlineRest.replace(/(?:約\s*)?\d+\s*分.*$/,'').trim()}else route=inlineRest}
+     for(let j=i+1;j<Math.min(lines.length,i+6)&&!detail;j++){
+       if(isMode(lines[j])||splitInline(lines[j]))break;
+       if(!route&&!timeInfo(lines[j])&&!isAddress(lines[j])){route=lines[j];continue}
+       if(timeInfo(lines[j])){detail=lines[j];break}
+     }
+     const t=timeInfo(detail);if(!t)continue;total+=t.mins;
+     const nearby=[detail,...lines.slice(i+1,Math.min(lines.length,i+7))].join(' ');
+     const nearbyStops=normalizeTransitNums(nearby).match(/[（(]\s*(\d+)\s*站\s*[)）]/);
+     if(t.stops==null&&nearbyStops)t.stops=Number(nearbyStops[1]);
+     const platform=platformInfo(nearby),pretty=formatRoute(route);
+     let text=`搭乘${pretty||mode}${t.mins}分${t.stops!=null?`(${t.stops}站)`:''}`;
+     if(platform)text+=`・${platform}號月台`;
+     parts.push(text);continue;
+   }
+ }
+ if(!parts.length){
+   for(const line of lines){
+     const walk=line.match(/(?:步行|走路).*?(\d+)\s*分(?:鐘)?[^\d]*(\d+(?:[.,]\d+)?)?\s*(公尺|米|m|公里|km)?/i);
+     if(walk){const mins=Number(walk[1]);total+=mins;const dist=walk[2]?(/公里|km/i.test(walk[3]||'')?`${walk[2]}公里`:`${walk[2]}公尺`):'';parts.push(`走路${mins}分${dist?`(${dist})`:''}`);continue}
+     const t=timeInfo(line);if(!t)continue;let route=line.replace(new RegExp(`^(?:${modes})\\s*`),'').replace(/(?:約\s*)?\d+\s*分.*$/,'').trim();if(!route)continue;total+=t.mins;const platform=platformInfo(line);route=formatRoute(route);let text=`搭乘${route}${t.mins}分${t.stops!=null?`(${t.stops}站)`:''}`;if(platform)text+=`・${platform}號月台`;parts.push(text)
+   }
+ }
+ return parts.join('，');
+}
 function organizeTransport(id){const el=document.querySelector(`[data-table-row="${id}"][data-table-key="transport"]`);if(!el)return;const result=summarizeGoogleTransit(el.value);if(!result){toast('無法辨識 Google Maps 交通內容，請確認已貼上路線文字');return}el.value=result;saveTableCell(el);el.style.height='auto';el.style.height=Math.min(220,Math.max(58,el.scrollHeight+2))+'px';toast('已整理交通資訊')}
 function previewBudget(){if(tab!=='trip')return;const d=state.days[dayIndex];let day=0;for(const r of d.rows){const el=document.querySelector(`[data-table-row="${r.id}"][data-table-key="cost"]`),n=el&&el.value.trim()!==''?Number(el.value):r.cost,cost=Number.isFinite(n)?n:r.cost;day+=r.costBasis==='group'?cost/state.people:cost}const all=state.days.reduce((n,x)=>n+total(x),0)-total(d)+day,budget=document.querySelector('[data-table-budget]');if(budget)budget.textContent='今日 '+money(day*budgetMode)+' · 全程 '+money(all*budgetMode)}
 function tableInput(r,key,label,type='text',extra=''){return `<label class="table-field"><span>${label}</span><input data-table-row="${r.id}" data-table-key="${key}" type="${type}" value="${esc(r[key])}" aria-label="${esc(r.name)}：${label}" ${extra}></label>`}
