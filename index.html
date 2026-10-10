@@ -333,7 +333,8 @@ function registerTools(){if(!document.modelContext?.registerTool)return;for(cons
 const PLANNER_LOCAL_KEY='travel-planner-current-v1|'+GH_SCOPE,PLANNER_HISTORY_KEY='travel-planner-history-v1|'+GH_SCOPE;
 let plannerRevision='',plannerDrag=null,plannerTarget=null;
 function plannerRestore(){if(ghConfig)return;try{const x=JSON.parse(localStorage.getItem(PLANNER_LOCAL_KEY)||'null');if(x){db=validDb(x.data);plannerRevision=x.revision}}catch{}}
-function plannerCheck(){if(!ghConfig||!ghReady||!ghToken||ghConflict||ghBusy){toast('請先完成同步或解決版本衝突');return false}if(!ghConfig){try{const x=JSON.parse(localStorage.getItem(PLANNER_LOCAL_KEY)||'null');if(x&&x.revision!==plannerRevision){toast('另一個分頁已更新資料；請重新整理後再編輯');return false}}catch{toast('無法檢查儲存版本，請先下載備份');return false}}return true}
+function plannerCheck(){if(!ghConfig||!ghToken){toast('請先設定私人 GitHub 儲存庫與授權碼');return false}if(!ghReady){toast('私人行程尚未讀取成功，請查看上方 GitHub 連線訊息');return false}if(ghConflict){toast('資料有版本衝突，修改已保留。請先下載此裝置備份，再到 GitHub 設定處理；不要直接覆蓋資料');return false}return true}
+
 function plannerCheckpoint(){try{const history=JSON.parse(localStorage.getItem(PLANNER_HISTORY_KEY)||'[]');history.unshift({at:new Date().toISOString(),data:structuredClone(db)});localStorage.setItem(PLANNER_HISTORY_KEY,JSON.stringify(history.slice(0,15)))}catch{toast('版本備援未成功，請下載 JSON 備份')}}
 function plannerSeedNotice(){return ''}
 let plannerExpanded=false,plannerEditing=false;
