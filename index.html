@@ -395,8 +395,31 @@ async function shopReadRemote(){
  if(!data||!Array.isArray(data.items))throw Error('GitHub 購物資料格式不正確，已保留本機資料');
  return {meta,data};
 }
-async function shopLoad(){if(shopBusy)return;shopBusy=true;try{const {meta:r,data:remote}=await shopReadRemote();shopSha=r?.sha||null;if(!shopLoaded){if(!shopDirty){shopData=remote;try{localStorage.setItem(SHOP_KEY,JSON.stringify(shopData))}catch{}}else if(JSON.stringify(shopData)!==JSON.stringify(remote)){toast('購物清單有本機修改，未覆蓋；請先下載備份再處理差異')}else shopDirty=false;shopLoaded=true}shopBase=remote;render()}catch(e){toast(e.message)}finally{shopBusy=false}}
-async function shopSync(){if(shopBusy)return;shopBusy=true;try{const {meta:latest,data:remote}=await shopReadRemote();if(shopDirty&&shopBase&&JSON.stringify(remote)!==JSON.stringify(shopBase)&&JSON.stringify(remote)!==JSON.stringify(shopData))throw Error('購物資料版本衝突：請先下載備份，不會覆蓋 GitHub');if(!shopDirty){shopData=remote;shopSha=latest?.sha||null;shopBase=structuredClone(remote);shopLoaded=true;try{localStorage.setItem(SHOP_KEY,JSON.stringify(shopData))}catch{}toast('購物清單已更新');return}const payload={message:'Update shopping list',content:ghEncode(shopData),branch:ghConfig.branch,...(latest?.sha?{sha:latest.sha}:{})};const result=await shopRequest('PUT',payload);shopSha=result.content?.sha||null;shopBase=structuredClone(shopData);shopDirty=false;shopLoaded=true;toast('購物清單已同步 GitHub')}catch(e){toast(e.message)}finally{shopBusy=false;render()}}
+async function shopLoad(){
+ if(shopBusy)return;
+ shopBusy=true;
+ try{
+  const {meta:r,data:remote}=await shopReadRemote();
+  const local=JSON.stringify(shopData),server=JSON.stringify(remote);
+  shopSha=r?.sha||null;
+  if(local===server){
+   shopDirty=false;
+   toast('已確認與 GitHub 購物資料一致（'+remote.items.length+' 筆）');
+  }else if(!shopDirty || (shopData.items.length===0 && !shopBase)){
+   // An empty device may safely take the remote data; do not discard nonempty local changes.
+   shopData=remote;
+   shopDirty=false;
+   try{localStorage.setItem(SHOP_KEY,server)}catch{toast('已讀取資料，但本機儲存空間不足')}
+   toast('已從 GitHub 讀取 '+remote.items.length+' 筆商品');
+  }else{
+   toast('本機購物資料與 GitHub 不同，已保留本機資料；請先下載備份再處理差異');
+  }
+  shopBase=structuredClone(remote);
+  shopLoaded=true;
+  render();
+ }catch(e){toast('讀取購物清單失敗：'+e.message)}finally{shopBusy=false}
+}
+async function shopSync(){if(shopBusy)return;shopBusy=true;try{const {meta:latest,data:remote}=await shopReadRemote();if(shopDirty&&((!shopBase&&JSON.stringify(remote)!==JSON.stringify(shopData)&&remote.items.length>0)||(shopBase&&JSON.stringify(remote)!==JSON.stringify(shopBase)&&JSON.stringify(remote)!==JSON.stringify(shopData))))throw Error('購物資料版本衝突：請先下載備份，不會覆蓋 GitHub');if(!shopDirty){shopData=remote;shopSha=latest?.sha||null;shopBase=structuredClone(remote);shopLoaded=true;try{localStorage.setItem(SHOP_KEY,JSON.stringify(shopData))}catch{}toast('購物清單已更新');return}const payload={message:'Update shopping list',content:ghEncode(shopData),branch:ghConfig.branch,...(latest?.sha?{sha:latest.sha}:{})};const result=await shopRequest('PUT',payload);shopSha=result.content?.sha||null;shopBase=structuredClone(shopData);shopDirty=false;shopLoaded=true;toast('購物清單已同步 GitHub')}catch(e){toast(e.message)}finally{shopBusy=false;render()}}
 function shopDownload(){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(shopData,null,2)],{type:'application/json'}));a.href=u;a.download='購物清單-備份.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function shopBought(x){return (x.purchases||[]).reduce((a,p)=>a+Number(p.quantity||0),0)}
 function shopping(){const cat=shopData.categories||[],items=shopData.items||[];return `<div class="page-title"><h2>🛍 購物清單</h2><div class="toolbar"><button data-action="shop-add">＋ 商品</button><button data-action="shop-category">管理分類</button></div></div><p class="muted">可複選分類、記錄不同購買價格及數量。圖片會縮小壓縮，與購物紀錄一起存在獨立的 shopping.json，不修改 travel.json。</p><div class="toolbar"><button data-action="shop-load">讀取 GitHub</button><button class="primary" data-action="shop-sync">同步購物清單</button><button data-action="shop-backup">下載購物備份</button><button data-action="shop-optimize">壓縮現有圖片</button></div><p class="muted">${shopDirty?'🟡 有尚未同步的購物資料':'🟢 購物資料無待同步修改'} · ${items.length} 項商品</p><label class="field">分類篩選<select id="shopFilter"><option value="">全部分類</option>${cat.map(c=>`<option>${esc(c)}</option>`).join('')}</select></label><div id="shopItems">${items.map(x=>shopCard(x)).join('')||'<div class="empty">尚未建立商品</div>'}</div>`}
