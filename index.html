@@ -167,7 +167,7 @@ function outLink(url,label,cls=''){return `<a class="link ${cls}" href="${esc(sa
 function linkifyText(text){const re=/(https?:\/\/[^\s<]+)/gi;let out='',last=0;for(const m of String(text||'').matchAll(re)){out+=esc(String(text).slice(last,m.index));const raw=m[0],clean=raw.replace(/[),.;!?，。；！？]+$/,'');out+=`<a class="inline-url" href="${esc(safeUrl(clean))}" target="_blank" rel="noopener noreferrer">${esc(clean)}</a>`+esc(raw.slice(clean.length));last=m.index+raw.length}return out+esc(String(text||'').slice(last))}
 function linkBackup(entries){return entries.map(([label,url])=>`<div class="link-backup"><label class="field">${esc(label)}<input readonly aria-label="${esc(label)}網址" value="${esc(safeUrl(url))}"></label><div class="info-actions"><button data-action="copy-link" type="button">複製網址</button><a class="link" href="${esc(safeUrl(url))}" target="_top" rel="noreferrer">在原視窗開啟</a></div></div>`).join('')}
 async function copyLink(button){const input=button.closest('.link-backup').querySelector('input');try{if(!navigator.clipboard)throw Error('clipboard');await navigator.clipboard.writeText(input.value);toast('網址已複製，可貼到 Safari 或 Chrome 開啟')}catch{input.focus();input.select();input.setSelectionRange(0,input.value.length);toast('已選取網址，請長按複製後貼到瀏覽器')}}
-function go(t){if(t!==tab){if(plannerSession)plannerFinish(false);plannerEditing=false;infoSorting=false}if(t==='table')t='trip';if(t==='food')t='more';if(t!==tab)pageHistory.push(tab);tab=t;render();window.scrollTo({top:0})}
+function go(t){if(t!==tab){if(plannerSession)plannerFinish(false);plannerEditing=false;infoSorting=false}if(t==='table')t='trip';if(t==='food')t='more';if(t!==tab)pageHistory.push(tab);tab=t;render();if(t==='shopping')shopLoad();window.scrollTo({top:0})}
 function backPage(){tab=pageHistory.pop()||'more';render();window.scrollTo({top:0})}
 function pageBack(){return '<div class="page-back no-print"><button data-action="back-page">‹ 回到前一頁</button></div>'}
 function dayPicker(){return `<div class="day-picker"><button data-action="prev-day" aria-label="前一天" ${dayIndex===0?'disabled':''}>‹</button><select aria-label="選擇日期" data-select-day>${state.days.map((d,i)=>`<option value="${i}" ${i===dayIndex?'selected':''}>DAY ${i+1} · ${esc(dateWithWeekday(d.date).slice(5).replace('-','/'))} · ${esc(d.title)}</option>`).join('')}</select><button data-action="next-day" aria-label="後一天" ${dayIndex===state.days.length-1?'disabled':''}>›</button></div>`}
@@ -254,7 +254,13 @@ function saveRowRelated(id,selected){const update=ids=>{const result=(ids||[]).f
 function tableRelatedContent(r){return `<button type="button" data-action="edit-row-related" data-id="${esc(r.id)}">設定連動頁面</button>${relatedLinks(r,true)}`}
 function relatedLinks(r,editable=false){const a=relatedArticles(r);return `<div class="related-links">${editable?rowRelatedChoices(r).filter(x=>x.selected&&!x.key.startsWith('info:')).map(x=>`<p>▧ ${esc(x.name)}${x.key==='entry'&&!state.entryNote||x.key==='luggage'&&!state.luggageNote?' <small>尚未填寫內容</small>':''} <button type="button" data-action="${x.key==='entry'?'edit-entry':x.key==='luggage'?'edit-luggage-note':'edit-flight'}" ${x.key.startsWith('flight:')?`data-index="${Number(x.key.slice(7))}"`:''}>編輯資料</button> <button type="button" class="danger" data-action="unlink-system" data-id="${esc(r.id)}" data-key="${esc(x.key)}">刪除連動</button></p>`).join(''):''}${state.refs.filter(x=>x.rowId===r.id).map(x=>outLink(x.url,esc(x.title))).join('')}${a.map(x=>editable?`<div class="info-actions"><button data-action="article" data-id="${x.id}">▧ ${esc(x.name)}</button><button type="button" data-action="edit-info" data-index="${state.info.indexOf(x)}">編輯資料</button><button type="button" class="danger" data-action="unlink-info" data-id="${r.id}" data-info-id="${x.id}">刪除連動</button></div>`:`<button data-action="article" data-id="${x.id}">▧ ${esc(x.name)}</button>`).join('')}</div>`}
 function legacySchedule(){return `<div class="page-title"><div><h2>時刻表</h2><p class="muted">畫面僅顯示單日；需要全程時可輸出成一頁 PDF。</p></div><button class="primary" data-action="schedule-pdf">全程時刻表 PDF</button></div><div class="legend">${types.map(x=>`<span class="badge ${x}">${x}</span>`).join('')}</div>${dayPicker()}${scheduleCanvas([dayIndex])}`}
-function printFullSchedule(){const rows=state.days.map((d,j)=>{const tt=times(d);return `<section><h2>D${j+1} · ${esc(dateWithWeekday(d.date))} · ${esc(d.title)}</h2><p class="departure-time">${esc(d.start)}出發</p><table><thead><tr><th>時間</th><th>行程</th><th>交通／停留</th></tr></thead><tbody>${d.rows.map((r,i)=>`<tr class="cat-${esc(labelName(r.category))}"><td>${r.travelMinutes>0&&r.stayMinutes===0?`${fmt(tt[i].start)}–${fmt(tt[i].end)}`:r.travelMinutes===0&&r.stayMinutes===0?fmt(tt[i].start):`${fmt(tt[i].arrival)}–${fmt(tt[i].end)}`}</td><td><span class="cat-label">${esc(labelName(r.category))}</span>${esc(r.name)}</td><td>${r.travelMinutes}分／${r.stayMinutes}分</td></tr>`).join('')||'<tr><td colspan="3">尚無行程</td></tr>'}</tbody></table></section>`});const pages=[];for(let k=0;k<state.days.length;k+=4)pages.push(`<div class="pdf-page"><main>${rows.slice(k,k+4).join('')}</main></div>`);const w=window.open('','_blank');if(!w){toast('瀏覽器阻擋了 PDF 視窗，請允許彈出視窗後再試');return}w.document.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${esc(state.name)}－全程時刻表</title><style>@page{size:A4 landscape;margin:7mm}*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:#24324a;margin:0;font-size:8.5pt}h1{font-size:13pt;margin:0 0 3mm}.pdf-page{break-after:page;page-break-after:always}.pdf-page:last-child{break-after:auto;page-break-after:auto}main{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2mm;align-items:start}section{break-inside:avoid;min-width:0;border:1px solid #ccd3db;border-radius:5px;padding:1.8mm}h2{font-size:10pt;margin:0 0 1mm}.departure-time{font-size:8pt;font-weight:700;margin:0 0 1.5mm;color:#43566c}table{width:100%;border-collapse:collapse;table-layout:fixed}th:first-child{width:28%}th:last-child{width:26%}td{overflow-wrap:anywhere;word-break:break-word}th,td{padding:1mm .65mm;border-bottom:1px solid #e3e6ea;text-align:left;vertical-align:top}th{font-size:8pt;background:#24324a;color:#fff}td{font-size:8.5pt;line-height:1.28}section,th,td,tr,.cat-label{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.cat-label{display:inline-block;padding:.4mm 1mm;border-radius:2mm;margin-right:1mm;font-size:7.5pt;font-weight:700;background:#e8f4ef;color:#2a5446}.cat-交通 td{background:#e5eefc}.cat-交通 .cat-label{background:#cbdcf5;color:#36547e}.cat-餐飲 td{background:#fff1df}.cat-餐飲 .cat-label{background:#f8dfbd;color:#7e5424}.cat-住宿 td{background:#edeafa}.cat-住宿 .cat-label{background:#dcd6f4;color:#625080}.cat-逛街 td{background:#fde9ef}.cat-逛街 .cat-label{background:#f5cfdb;color:#8b4563}.cat-其他 td{background:#fff}.cat-其他 .cat-label{background:transparent;color:#536171}tbody tr td{background:#fff;color:#24324a}.cat-景點 td{background:#e8f4ef}@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}button{display:none}}</style></head><body><h1>${esc(state.name)}｜全程時刻表</h1>${pages.join('')}<script>window.onload=()=>setTimeout(()=>window.print(),250);<\/script></body></html>`);w.document.close()}
+function printFullSchedule(){
+const rows=state.days.map((d,j)=>{const tt=times(d);return `<section><h2>D${j+1} · ${esc(dateWithWeekday(d.date))} · ${esc(d.title)}</h2><p class="departure-time">${esc(d.start)}出發</p><table><thead><tr><th>時間</th><th>行程／交通與停留資訊</th></tr></thead><tbody>${d.rows.map((r,i)=>{const t=tt[i],travel=Number(r.travelMinutes)||0,stay=Number(r.stayMinutes)||0,isTransport=r.category==='交通',category=esc(labelName(r.category));if(isTransport){const duration=travel+stay;return `<tr class="transit-row"><td class="clock">${duration>0?`${fmt(t.start)}–${fmt(t.end)}`:fmt(t.start)}</td><td><span class="kind transit-kind">交通</span><strong>${esc(r.name)}</strong><span class="inline-duration transit-duration">${duration}分</span>${t.wait?`<span class="inline-wait">含等待 ${t.wait}分</span>`:''}${t.conflict?`<div class="warning">固定時間衝突 ${t.conflict}分</div>`:''}</td></tr>`}const transit=travel>0?`<tr class="transit-row"><td class="clock">${fmt(t.start)}–${fmt(t.arrival)}</td><td><span class="kind transit-kind">交通</span><strong>前往${esc(r.name)}</strong><span class="inline-duration transit-duration">${travel}分</span>${t.wait?`<span class="inline-wait">含等待 ${t.wait}分</span>`:''}</td></tr>`:'';const place=`<tr class="place-row cat-${category}"><td class="clock">${stay>0?`${fmt(t.arrival)}–${fmt(t.end)}`:fmt(t.arrival)}</td><td><span class="kind cat-label">${category}</span><strong>${esc(r.name)}</strong><span class="inline-duration detail-stay">停留 ${stay}分</span>${t.conflict?`<div class="warning">固定時間衝突 ${t.conflict}分</div>`:''}</td></tr>`;return transit+place}).join('')||'<tr><td colspan="2">尚無行程</td></tr>'}</tbody></table></section>`});
+const pages=[];for(let k=0;k<state.days.length;k+=4)pages.push(`<div class="pdf-page"><main>${rows.slice(k,k+4).join('')}</main></div>`);
+const w=window.open('','_blank');if(!w){toast('瀏覽器阻擋了 PDF 視窗，請允許彈出視窗後再試');return}
+w.document.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${esc(state.name)}－全程時刻表</title><style>
+@page{size:A4 landscape;margin:7mm}*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:#24324a;margin:0;font-size:8.5pt}h1{font-size:13pt;margin:0 0 3mm}.pdf-page{break-after:page;page-break-after:always}.pdf-page:last-child{break-after:auto;page-break-after:auto}main{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2mm;align-items:start}section{break-inside:avoid;min-width:0;border:1px solid #aab5c0;border-radius:5px;padding:1.8mm}h2{font-size:10pt;margin:0 0 1mm}.departure-time{font-size:8pt;font-weight:700;margin:0 0 1.5mm;color:#43566c}table{width:100%;border-collapse:collapse;table-layout:fixed}th:first-child{width:29%}td{overflow-wrap:anywhere;word-break:break-word}th,td{padding:1.1mm .8mm;border-bottom:1px solid #d6dce2;text-align:left;vertical-align:top}th{font-size:8pt;background:#24324a;color:#fff}td{font-size:8pt;line-height:1.35}.clock{font-size:7.7pt;font-weight:700;font-variant-numeric:tabular-nums}.kind{display:inline-block;padding:.35mm 1mm;border-radius:1mm;margin-right:1mm;font-size:7pt;font-weight:700;vertical-align:baseline}.transit-row td{background:#d3e3fa;border-bottom:1px solid #8ba9d4}.transit-row td:first-child{border-left:2px solid #3165a3}.transit-kind{background:#2d609d;color:white}.inline-duration{display:inline-block;margin-left:1.5mm;font-size:7.6pt;font-weight:750;white-space:nowrap}.transit-duration{color:#254c7e}.inline-wait{display:inline-block;margin-left:1mm;font-size:7pt;color:#4b5c72}.place-row td{background:#f7f8f6}.place-row td:first-child{border-left:2px solid #6a8c37}.cat-景點 td{background:#e3edc9}.cat-景點 .cat-label{background:#65833c;color:white}.cat-交通 td{background:#d3e3fa}.cat-交通 .cat-label{background:#2d609d;color:white}.cat-餐飲 td{background:#ffebcb}.cat-餐飲 .cat-label{background:#995a17;color:white}.cat-住宿 td{background:#e9dff8}.cat-住宿 .cat-label{background:#71509c;color:white}.cat-逛街 td{background:#f8dbe5}.cat-逛街 .cat-label{background:#a24c70;color:white}.cat-其他 .cat-label{background:#e4e8ed;color:#37475a}.detail-line{display:flex;flex-wrap:wrap;gap:1mm 2mm;margin-top:.7mm;font-size:7.4pt;font-weight:650}.detail-line span{white-space:nowrap}.detail-travel{color:#245a9d}.detail-arrive{color:#7b4b1d}.detail-stay{color:#4c7524}.detail-leave{color:#933f66}.warning{color:#9c2727;font-weight:700;font-size:7pt}.transit-row,.place-row{break-inside:avoid;page-break-inside:avoid}section,th,td,tr,.kind,.detail-line{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}button{display:none}}
+</style></head><body><h1>${esc(state.name)}｜全程時刻表</h1>${pages.join('')}<script>window.onload=()=>setTimeout(()=>window.print(),250);<\/script></body></html>`);w.document.close()}
 function scheduleZeroNotes(indices){return indices.map(j=>{const d=state.days[j],tt=times(d),rows=d.rows.map((r,i)=>r.duration===0?`<button data-action="detail" data-id="${r.id}" class="zero-event ${esc(labelName(r.category))}"><small>${fmt(tt[i].start)} · 0 分鐘</small><span>${esc(r.name)}</span></button>`:'').join('');return rows?`<section class="card zero-events"><h3>D${j+1} · ${esc(d.date)} · 0 分鐘行程</h3><p class="muted">不占用時間，後續行程接續同一時刻。</p>${rows}</section>`:''}).join('')}
 function scheduleCanvas(indices){const all=indices.flatMap(j=>times(state.days[j])),start=all.length?Math.floor(Math.min(...all.map(t=>t.start))/60)*60:480,end=all.length?Math.ceil(Math.max(...all.map(t=>t.end))/60)*60:1200,scale=0.8;return `${scheduleZeroNotes(indices)}<div class="schedule-wrap ${indices.length===1?'single':''}"><div class="schedule-grid" data-axis-start="${start}" data-axis-end="${end}" style="--columns:${indices.length};--hour-height:${60*scale}px"><div class="schedule-corner">時間</div>${indices.map(j=>`<div class="schedule-heading">D${j+1} · ${state.days[j].date.slice(5)}</div>`).join('')}<div class="time-axis" style="height:${(end-start)*scale}px">${Array.from({length:Math.max(1,(end-start)/60+1)},(_,i)=>`<span data-minute="${start+i*60}" style="top:${i*60*scale}px">${fmt(start+i*60)}</span>`).join('')}</div>${indices.map(j=>{const d=state.days[j],tt=times(d);return `<div class="schedule-column" style="height:${(end-start)*scale}px">${d.rows.map((r,i)=>r.duration===0?'':`<button class="event-label ${esc(r.category)}" data-action="detail" data-id="${r.id}" data-start="${tt[i].start}" data-duration="${r.duration}" style="top:${(tt[i].start-start)*scale}px;height:${r.duration*scale}px" aria-label="${esc(r.name)}，${r.duration}分鐘"><small>${fmt(tt[i].start)}–${fmt(tt[i].end)}</small><span>${esc(r.name)}</span><small>交通 ${r.travelMinutes} 分 · 停留 ${r.stayMinutes} 分</small></button>`).join('')}</div>`}).join('')}</div></div>`}
 function scheduleCoordinates(start,end,events){const bounds=[...new Set([start,end,...events.flatMap(e=>[e.start,e.start+e.duration])])].sort((a,b)=>a-b),heights=bounds.slice(1).map((v,i)=>(v-bounds[i])*.8);for(const e of events){const first=bounds.indexOf(e.start),last=bounds.indexOf(e.start+e.duration);if(last<=first)continue;const current=heights.slice(first,last).reduce((a,b)=>a+b,0),extra=Math.max(0,e.height+4-current);for(let i=first;i<last;i++)heights[i]+=extra*(bounds[i+1]-bounds[i])/e.duration}const positions=[0];heights.forEach(h=>positions.push(positions.at(-1)+h));return minute=>{if(minute<=start)return 0;if(minute>=end)return positions.at(-1);const i=bounds.findIndex(v=>v>minute)-1;return positions[i]+(minute-bounds[i])/(bounds[i+1]-bounds[i])*heights[i]}}
@@ -370,10 +376,40 @@ init();
 
 
 /* 購物清單獨立於 travel.json；圖片壓縮後存放 shopping.json，避免變更原有旅程結構。 */
-const SHOP_KEY='travel-shopping-v1', SHOP_DEFAULT=()=>({version:1,categories:['藥妝','美妝','服飾','食品','伴手禮','生活雜貨','其他'],items:[]});
-let shopData=SHOP_DEFAULT(),shopSha=null,shopBase=null,shopDirty=false,shopBusy=false,shopLoaded=false;
-try{const x=JSON.parse(localStorage.getItem(SHOP_KEY)||'null');if(x&&Array.isArray(x.items)){shopData=x;shopDirty=true}}catch{}
-function shopStore(){shopDirty=true;try{localStorage.setItem(SHOP_KEY,JSON.stringify(shopData))}catch(e){toast('裝置空間不足，請先下載購物備份')} }
+const SHOP_KEY='travel-shopping-v1', SHOP_SYNC_KEY='travel-shopping-sync-v2', SHOP_RECOVERY_KEY='travel-shopping-recovery-v2', SHOP_DEFAULT=()=>({version:1,categories:['藥妝','美妝','服飾','食品','伴手禮','生活雜貨','其他'],items:[]});
+let shopData=SHOP_DEFAULT(),shopSha=null,shopBase=null,shopDirty=false,shopBusy=false,shopLoaded=false,shopTimer=null,shopRevision=0,shopMessage='尚未讀取 GitHub 購物資料';
+const shopSame=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+try{
+ const x=JSON.parse(localStorage.getItem(SHOP_KEY)||'null');
+ if(x&&Array.isArray(x.items))shopData=x;
+ const saved=JSON.parse(localStorage.getItem(SHOP_SYNC_KEY)||'null');
+ if(saved&&saved.config===ghConfigId()&&saved.base&&Array.isArray(saved.base.items)){
+  shopBase=saved.base;shopDirty=!shopSame(shopData,shopBase);
+ }else if(x&&Array.isArray(x.items))shopDirty=true; // 舊版沒有同步基準，不冒險直接上傳
+}catch{}
+function shopSaveState(){
+ try{
+  localStorage.setItem(SHOP_KEY,JSON.stringify(shopData));
+  if(shopBase&&ghConfig)localStorage.setItem(SHOP_SYNC_KEY,JSON.stringify({config:ghConfigId(),base:shopBase}));
+ }catch{shopMessage='本機儲存空間不足，請立即下載購物備份';toast(shopMessage)}
+}
+function shopProtectLocal(reason){
+ try{
+  const old=localStorage.getItem(SHOP_RECOVERY_KEY);
+  const snapshot={savedAt:new Date().toISOString(),reason,config:ghConfigId(),data:shopData};
+  if(old){const previous=JSON.parse(old);if(!shopSame(previous.data,shopData))localStorage.setItem(SHOP_RECOVERY_KEY+'-'+Date.now(),old)}
+  localStorage.setItem(SHOP_RECOVERY_KEY,JSON.stringify(snapshot));return true;
+ }catch{return false}
+}
+function shopQueueSync(delay=1200){
+ clearTimeout(shopTimer);
+ if(!ghConfig||!ghToken){shopMessage='僅儲存於此裝置：請先連線 GitHub';return}
+ shopMessage='購物資料已儲存，等待自動同步 GitHub';
+ shopTimer=setTimeout(()=>{if(!shopBusy)shopSync(true);else shopQueueSync(1500)},delay);
+}
+function shopStore(){
+ shopRevision++;shopDirty=true;shopSaveState();shopQueueSync();
+}
 function shopApiUrl(){if(!ghConfig)throw Error('請先連線 GitHub');return 'https://api.github.com/repos/'+encodeURIComponent(ghConfig.owner)+'/'+encodeURIComponent(ghConfig.repo)+'/contents/shopping.json'}
 async function shopRequest(method,body){const res=await fetch(shopApiUrl()+(method==='GET'?'?ref='+encodeURIComponent(ghConfig.branch):''),{method,headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+ghToken,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store'});if(method==='GET'&&res.status===404)return null;if(!res.ok)throw Error('購物資料 GitHub 連線失敗（'+res.status+'）');return res.json()}
 async function shopReadRemote(){
@@ -396,33 +432,81 @@ async function shopReadRemote(){
  return {meta,data};
 }
 async function shopLoad(){
- if(shopBusy)return;
+ if(shopBusy||!ghConfig||!ghToken)return;
  shopBusy=true;
+ const startingRevision=shopRevision;
  try{
   const {meta:r,data:remote}=await shopReadRemote();
-  const local=JSON.stringify(shopData),server=JSON.stringify(remote);
   shopSha=r?.sha||null;
-  if(local===server){
-   shopDirty=false;
-   toast('已確認與 GitHub 購物資料一致（'+remote.items.length+' 筆）');
-  }else if(!shopDirty || (shopData.items.length===0 && !shopBase)){
-   // An empty device may safely take the remote data; do not discard nonempty local changes.
-   shopData=remote;
-   shopDirty=false;
-   try{localStorage.setItem(SHOP_KEY,server)}catch{toast('已讀取資料，但本機儲存空間不足')}
-   toast('已從 GitHub 讀取 '+remote.items.length+' 筆商品');
+  if(shopRevision!==startingRevision){shopMessage='讀取期間有新修改，已保留本機資料';return}
+  if(shopSame(shopData,remote)){
+   shopData=structuredClone(remote);shopBase=structuredClone(remote);shopDirty=false;
+   shopMessage='購物清單已與 GitHub 同步';
+  }else if(shopBase&&shopSame(shopData,shopBase)){
+   // 本機沒有未上傳修改，GitHub 才是最新來源
+   shopData=structuredClone(remote);shopBase=structuredClone(remote);shopDirty=false;
+   shopMessage='已自 GitHub 取得最新購物清單';
+  }else if(!shopBase){
+   // 從舊版升級：無法確定本機是否未同步，先留復原副本，再以 GitHub 為準
+   if(!shopProtectLocal('升級自動同步前的舊版本機資料'))throw Error('無法保留舊版本機備份；請先下載購物備份');
+   shopData=structuredClone(remote);shopBase=structuredClone(remote);shopDirty=false;
+   shopMessage='已讀取 GitHub 最新購物資料；舊版本機資料已留存復原備份';
+  }else if(shopSame(remote,shopBase)){
+   shopMessage='本機有未同步修改，準備自動上傳';
   }else{
-   toast('本機購物資料與 GitHub 不同，已保留本機資料；請先下載備份再處理差異');
+   shopMessage='購物資料版本衝突：本機與 GitHub 均有修改，已保留本機資料，未覆蓋 GitHub';
+   shopLoaded=true;shopSaveState();return;
   }
-  shopBase=structuredClone(remote);
-  shopLoaded=true;
-  render();
- }catch(e){toast('讀取購物清單失敗：'+e.message)}finally{shopBusy=false}
+  shopLoaded=true;shopSaveState();
+  if(shopDirty)shopQueueSync(500);
+ }catch(e){shopMessage='讀取購物清單失敗：'+e.message;toast(shopMessage)}
+ finally{shopBusy=false;render()}
 }
-async function shopSync(){if(shopBusy)return;shopBusy=true;try{const {meta:latest,data:remote}=await shopReadRemote();if(shopDirty&&((!shopBase&&JSON.stringify(remote)!==JSON.stringify(shopData)&&remote.items.length>0)||(shopBase&&JSON.stringify(remote)!==JSON.stringify(shopBase)&&JSON.stringify(remote)!==JSON.stringify(shopData))))throw Error('購物資料版本衝突：請先下載備份，不會覆蓋 GitHub');if(!shopDirty){shopData=remote;shopSha=latest?.sha||null;shopBase=structuredClone(remote);shopLoaded=true;try{localStorage.setItem(SHOP_KEY,JSON.stringify(shopData))}catch{}toast('購物清單已更新');return}const payload={message:'Update shopping list',content:ghEncode(shopData),branch:ghConfig.branch,...(latest?.sha?{sha:latest.sha}:{})};const result=await shopRequest('PUT',payload);shopSha=result.content?.sha||null;shopBase=structuredClone(shopData);shopDirty=false;shopLoaded=true;toast('購物清單已同步 GitHub')}catch(e){toast(e.message)}finally{shopBusy=false;render()}}
+async function shopSync(automatic=false){
+ if(shopBusy||!ghConfig||!ghToken)return;
+ if(!shopLoaded){await shopLoad();if(!shopLoaded||!shopDirty)return}
+ if(!shopDirty){if(!automatic)await shopLoad();return}
+ shopBusy=true;clearTimeout(shopTimer);
+ const revision=shopRevision, snapshot=structuredClone(shopData);
+ try{
+  shopMessage='正在同步購物清單至 GitHub';
+  const {meta:latest,data:remote}=await shopReadRemote();
+  if(shopSame(snapshot,remote)){
+   shopSha=latest?.sha||null;shopBase=structuredClone(remote);
+   shopDirty=!shopSame(shopData,remote);
+   shopMessage=shopDirty?'有新修改等待同步':'購物清單已與 GitHub 同步';
+  }else{
+   if(!shopBase||!shopSame(remote,shopBase))throw Error('GitHub 資料已由其他裝置修改，為避免覆蓋已停止自動同步；請先下載購物備份');
+   const payload={message:'Update shopping list',content:ghEncode(snapshot),branch:ghConfig.branch,...(latest?.sha?{sha:latest.sha}:{})};
+   const result=await shopRequest('PUT',payload);
+   shopSha=result.content?.sha||null;shopBase=structuredClone(snapshot);
+   shopDirty=!shopSame(shopData,snapshot);
+   shopMessage=shopDirty?'上一批資料已同步，正在處理新修改':'購物清單已成功同步 GitHub';
+  }
+  shopSaveState();
+  if(!automatic&&!shopDirty)toast('購物清單已成功同步 GitHub');
+  if(shopDirty)shopQueueSync(600);
+ }catch(e){
+  shopMessage='同步失敗：'+e.message;
+  if(!automatic)toast(shopMessage);
+  // 版本衝突必須由使用者處理；連線失敗等情況等待網路恢復或手動重試
+ }finally{shopBusy=false;render()}
+}
+function shopDownloadRecovery(){
+ const entries=[];
+ for(let i=0;i<localStorage.length;i++){
+  const key=localStorage.key(i);
+  if(key===SHOP_RECOVERY_KEY||key?.startsWith(SHOP_RECOVERY_KEY+'-')){
+   try{entries.push(JSON.parse(localStorage.getItem(key)))}catch{}
+  }
+ }
+ if(!entries.length)return toast('此裝置沒有舊版購物備份');
+ const a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(entries,null,2)],{type:'application/json'}));
+ a.href=u;a.download='購物清單-舊版復原備份.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);
+}
 function shopDownload(){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(shopData,null,2)],{type:'application/json'}));a.href=u;a.download='購物清單-備份.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function shopBought(x){return (x.purchases||[]).reduce((a,p)=>a+Number(p.quantity||0),0)}
-function shopping(){const cat=shopData.categories||[],items=shopData.items||[];return `<div class="page-title"><h2>🛍 購物清單</h2><div class="toolbar"><button data-action="shop-add">＋ 商品</button><button data-action="shop-category">管理分類</button></div></div><p class="muted">可複選分類、記錄不同購買價格及數量。圖片會縮小壓縮，與購物紀錄一起存在獨立的 shopping.json，不修改 travel.json。</p><div class="toolbar"><button data-action="shop-load">讀取 GitHub</button><button class="primary" data-action="shop-sync">同步購物清單</button><button data-action="shop-backup">下載購物備份</button><button data-action="shop-optimize">壓縮現有圖片</button></div><p class="muted">${shopDirty?'🟡 有尚未同步的購物資料':'🟢 購物資料無待同步修改'} · ${items.length} 項商品</p><label class="field">分類篩選<select id="shopFilter"><option value="">全部分類</option>${cat.map(c=>`<option>${esc(c)}</option>`).join('')}</select></label><div id="shopItems">${items.map(x=>shopCard(x)).join('')||'<div class="empty">尚未建立商品</div>'}</div>`}
+function shopping(){const cat=shopData.categories||[],items=shopData.items||[];return `<div class="page-title"><h2>🛍 購物清單</h2><div class="toolbar"><button data-action="shop-add">＋ 商品</button><button data-action="shop-category">管理分類</button></div></div><p class="muted">可複選分類、記錄不同購買價格及數量。圖片會縮小壓縮，與購物紀錄一起存在獨立的 shopping.json，不修改 travel.json。</p><div class="toolbar"><button data-action="shop-load">讀取 GitHub</button><button class="primary" data-action="shop-sync">同步購物清單</button><button data-action="shop-backup">下載購物備份</button><button data-action="shop-recovery">下載舊版復原備份</button><button data-action="shop-optimize">壓縮現有圖片</button></div><p class="muted">${esc(shopMessage)} · ${items.length} 項商品</p><label class="field">分類篩選<select id="shopFilter"><option value="">全部分類</option>${cat.map(c=>`<option>${esc(c)}</option>`).join('')}</select></label><div id="shopItems">${items.map(x=>shopCard(x)).join('')||'<div class="empty">尚未建立商品</div>'}</div>`}
 function shopCard(x){const n=shopBought(x),q=Number(x.quantity||0),cost=(x.purchases||[]).reduce((a,p)=>a+Number(p.quantity||0)*Number(p.price||0),0);return `<article class="card shop-item" data-categories="${esc((x.categories||[]).join('|'))}"><div style="display:flex;gap:14px;align-items:flex-start">${x.image?`<img src="${esc(x.image)}" alt="" loading="lazy" style="width:92px;height:92px;object-fit:cover;border-radius:10px">`:'<div style="width:92px;height:92px;background:#f1f3f5;border-radius:10px;display:grid;place-items:center">🛍</div>'}<div style="flex:1;min-width:0"><h3>${esc(x.name)}</h3><p class="muted">${esc((x.categories||[]).join('、'))}</p><p class="prewrap">${esc(x.note||'')}</p><strong>${n>=q&&q>0?'☑ 已買齊':'□ 尚需 '+Math.max(0,q-n)+' 件'}</strong><p>已購 ${n} / 預計 ${q} 件 · 共 ¥${cost.toLocaleString()}</p></div></div>${(x.locations||[]).length?`<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px"><strong>📍 購買地點（${x.locations.length}）</strong>${x.locations.map(p=>`<div style="padding:7px 0;overflow-wrap:anywhere"><a class="link" href="${esc(shopMapUrl(p))}" target="_blank" rel="noopener noreferrer" style="max-width:100%;text-align:left">🗺️ ${esc(p.name)}</a>${p.note?`<div class="muted">${esc(p.note)}</div>`:''}</div>`).join('')}</div>`:''}<div class="toolbar"><button data-action="shop-edit" data-id="${esc(x.id)}">編輯</button><button data-action="shop-buy" data-id="${esc(x.id)}">＋ 購買紀錄</button><button data-action="shop-delete" data-id="${esc(x.id)}">刪除</button></div>${(x.purchases||[]).map(p=>`<p class="muted">• ${esc(p.date||'')}｜${Number(p.quantity)} 件 × ¥${Number(p.price).toLocaleString()} ${esc(p.note||'')}</p>`).join('')}</article>`}
 function shopCategoryManager(){modal(`${modalHeader('管理購物標籤')}<p class="muted">可新增、重新命名或刪除標籤。重新命名會同步更新已使用該標籤的商品；刪除只會移除標籤，不會刪除商品。</p><div class="toolbar"><button type="button" data-action="shop-cat-add">＋ 新增標籤</button></div><div>${shopData.categories.map((c,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line,#ddd)"><span style="min-width:0;overflow-wrap:anywhere">${esc(c)} <small class="muted">(${shopData.items.filter(x=>(x.categories||[]).includes(c)).length} 項)</small></span><span class="toolbar" style="flex-shrink:0"><button type="button" data-action="shop-cat-rename" data-index="${i}">修改</button><button type="button" data-action="shop-cat-delete" data-index="${i}">刪除</button></span></div>`).join('')}</div><div class="modalactions"><button type="button" data-action="close">完成</button></div>`)}
 function shopAddCategory(value){const name=String(value).trim();if(!name)return toast('標籤名稱不能空白');if(shopData.categories.some(c=>c.toLowerCase()===name.toLowerCase()))return toast('已有相同標籤');shopData.categories.push(name);shopStore();render();shopCategoryManager()}
@@ -485,13 +569,14 @@ async function shopOptimizeExisting(){
   }catch(e){toast(e.message||'壓縮失敗，未更動資料')}
   finally{shopBusy=false}
 }
-document.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(!t)return;const a=t.dataset.action,id=t.dataset.id;if(a==='shop-place-add'){document.getElementById('shopLocations')?.insertAdjacentHTML('beforeend',shopLocationRow())}if(a==='shop-place-remove')t.closest('.shop-location-row')?.remove();if(a==='shop-add')shopEdit();if(a==='shop-edit')shopEdit(id);if(a==='shop-buy')shopPurchase(id);if(a==='shop-load')shopLoad();if(a==='shop-sync')shopSync();if(a==='shop-backup')shopDownload();if(a==='shop-optimize')shopOptimizeExisting();if(a==='shop-delete'&&confirm('確定刪除此商品與所有購買紀錄？')){shopData.items=shopData.items.filter(x=>x.id!==id);shopStore();render()}if(a==='shop-category')shopCategoryManager();
+document.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(!t)return;const a=t.dataset.action,id=t.dataset.id;if(a==='shop-place-add'){document.getElementById('shopLocations')?.insertAdjacentHTML('beforeend',shopLocationRow())}if(a==='shop-place-remove')t.closest('.shop-location-row')?.remove();if(a==='shop-add')shopEdit();if(a==='shop-edit')shopEdit(id);if(a==='shop-buy')shopPurchase(id);if(a==='shop-load')shopLoad();if(a==='shop-sync')shopSync();if(a==='shop-backup')shopDownload();if(a==='shop-recovery')shopDownloadRecovery();if(a==='shop-optimize')shopOptimizeExisting();if(a==='shop-delete'&&confirm('確定刪除此商品與所有購買紀錄？')){shopData.items=shopData.items.filter(x=>x.id!==id);shopStore();render()}if(a==='shop-category')shopCategoryManager();
 if(a==='shop-cat-add'){const name=prompt('請輸入新標籤名稱');if(name!==null)shopAddCategory(name)}
 if(a==='shop-cat-rename'){const oldName=shopData.categories[Number(t.dataset.index)];if(oldName!==undefined){const name=prompt('修改標籤名稱',oldName);if(name!==null)shopRenameCategory(oldName,name)}}
 if(a==='shop-cat-delete'){const oldName=shopData.categories[Number(t.dataset.index)];if(oldName!==undefined)shopDeleteCategory(oldName)}});
 document.addEventListener('change',e=>{if(e.target.id==='shopFilter'){document.querySelectorAll('.shop-item').forEach(el=>el.hidden=!!e.target.value&&!el.dataset.categories.split('|').includes(e.target.value))}});
-document.addEventListener('submit',async e=>{const f=e.target;if(!['shopForm','shopPurchaseForm'].includes(f.id))return;e.preventDefault();e.stopImmediatePropagation();try{const d=new FormData(f),id=f.dataset.id;if(f.id==='shopForm'){const name=String(d.get('name')||'').trim(),quantity=Number(d.get('quantity'));if(!name||!Number.isInteger(quantity)||quantity<1)throw Error('請填正確商品名稱與數量');const file=d.get('image'),compressed=file?.size?await shopCompress(file):null;let x=shopData.items.find(v=>v.id===id);if(!x){x={id:crypto.randomUUID(),purchases:[]};shopData.items.push(x)}Object.assign(x,{name,quantity,note:String(d.get('note')||''),categories:d.getAll('categories')});if(d.get('removeImage'))x.image='';if(compressed)x.image=compressed;const locations=[];for(const row of f.querySelectorAll('.shop-location-row')){const place={name:row.querySelector('.shop-place-name').value.trim(),url:row.querySelector('.shop-place-url').value.trim(),note:row.querySelector('.shop-place-note').value.trim()};if(!place.name&&!place.url&&!place.note)continue;if(!place.name)throw Error('購買地點請填寫地點名稱');if(place.url){let u;try{u=new URL(place.url)}catch{throw Error('Google Maps 連結格式不正確')}if(u.protocol!=='https:'||!(/(^|\.)google\.[a-z.]+$/.test(u.hostname)||['maps.app.goo.gl','goo.gl'].includes(u.hostname)))throw Error('請填入 Google Maps 的 HTTPS 連結')}locations.push(place)}x.locations=locations}else{const x=shopData.items.find(v=>v.id===id),quantity=Number(d.get('quantity')),price=Number(d.get('price'));if(!x||!Number.isInteger(quantity)||quantity<1||!Number.isFinite(price)||price<0)throw Error('購買數量或價格不正確');x.purchases||=[];x.purchases.push({id:crypto.randomUUID(),date:String(d.get('date')),quantity,price,note:String(d.get('note')||'')})}shopStore();close();render();toast('已儲存在此裝置，請同步 GitHub')}catch(err){toast(err.message)}},true);
+document.addEventListener('submit',async e=>{const f=e.target;if(!['shopForm','shopPurchaseForm'].includes(f.id))return;e.preventDefault();e.stopImmediatePropagation();try{const d=new FormData(f),id=f.dataset.id;if(f.id==='shopForm'){const name=String(d.get('name')||'').trim(),quantity=Number(d.get('quantity'));if(!name||!Number.isInteger(quantity)||quantity<1)throw Error('請填正確商品名稱與數量');const file=d.get('image'),compressed=file?.size?await shopCompress(file):null;let x=shopData.items.find(v=>v.id===id);if(!x){x={id:crypto.randomUUID(),purchases:[]};shopData.items.push(x)}Object.assign(x,{name,quantity,note:String(d.get('note')||''),categories:d.getAll('categories')});if(d.get('removeImage'))x.image='';if(compressed)x.image=compressed;const locations=[];for(const row of f.querySelectorAll('.shop-location-row')){const place={name:row.querySelector('.shop-place-name').value.trim(),url:row.querySelector('.shop-place-url').value.trim(),note:row.querySelector('.shop-place-note').value.trim()};if(!place.name&&!place.url&&!place.note)continue;if(!place.name)throw Error('購買地點請填寫地點名稱');if(place.url){let u;try{u=new URL(place.url)}catch{throw Error('Google Maps 連結格式不正確')}if(u.protocol!=='https:'||!(/(^|\.)google\.[a-z.]+$/.test(u.hostname)||['maps.app.goo.gl','goo.gl'].includes(u.hostname)))throw Error('請填入 Google Maps 的 HTTPS 連結')}locations.push(place)}x.locations=locations}else{const x=shopData.items.find(v=>v.id===id),quantity=Number(d.get('quantity')),price=Number(d.get('price'));if(!x||!Number.isInteger(quantity)||quantity<1||!Number.isFinite(price)||price<0)throw Error('購買數量或價格不正確');x.purchases||=[];x.purchases.push({id:crypto.randomUUID(),date:String(d.get('date')),quantity,price,note:String(d.get('note')||'')})}shopStore();close();render();toast('已儲存，將自動同步 GitHub')}catch(err){toast(err.message)}},true);
 
-window.addEventListener('online',()=>{ghPush().then(()=>ghPoll()).catch(()=>{})});
+window.addEventListener('online',()=>{ghPush().then(()=>ghPoll()).catch(()=>{});if(shopDirty)shopQueueSync(300)});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&tab==='shopping'&&!shopDirty)shopLoad()});
 </script>
 </body></html>
