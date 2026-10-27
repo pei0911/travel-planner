@@ -118,7 +118,7 @@ body.cc-mode .gh-banner{background:#fff6e3;border-color:#efe1c4}
 .shop-stepper input{width:64px;text-align:center}
 .shop-item progress{display:block;margin:8px 0}
 </style>
-</head><body><header><div class="brand"><span class="mark">旅</span><div><small id="tripMeta">授權後讀取私人行程</small><h1 id="tripName">私人旅程手帖</h1></div></div><div class="header-right"><span id="saveState" role="status">尚未連線</span><button data-tab="journeys">我的旅程</button></div></header><div class="shell"><nav id="nav" aria-label="主選單"></nav><main id="main"></main></div><dialog id="modal"><div id="modalBody"></div></dialog><div id="toast" role="status" hidden="">備份已匯出</div><script type="application/json" id="travel-sources">{"groups": ["其他"], "luggage": [], "todo": [], "articles": [], "luggageNote": "", "entryNote": ""}</script><script type="application/json" id="travel-initial">{"version": 3, "activeId": "empty-private", "trips": [{"id": "empty-private", "version": 3, "name": "我的旅程", "destination": "", "people": 1, "currency": "JPY", "days": [{"date": "2026-01-01", "title": "新的一天", "base": "", "start": "09:00", "rows": []}], "info": [], "refs": [], "todo": [], "luggage": [], "luggageGroups": ["其他"], "luggageNote": "", "entryNote": "", "flights": [{"airline": "", "number": "", "date": "", "from": "", "to": "", "depart": "", "arrive": "", "booking": "", "note": ""}, {"airline": "", "number": "", "date": "", "from": "", "to": "", "depart": "", "arrive": "", "booking": "", "note": ""}], "food": []}], "template": {"groups": ["其他"], "items": [], "note": ""}}</script><script type="application/json" id="travel-published-data" data-revision="b96500b9-7320-4ee5-8e31-2c1240b1cc9b">null</script><script type="application/json" id="travel-github-config">null</script><script id="travel-app">'use strict';
+</head><body class=""><header><div class="brand"><span class="mark">旅</span><div><small id="tripMeta">授權後讀取私人行程</small><h1 id="tripName">私人旅程手帖</h1></div></div><div class="header-right"><span id="saveState" role="status">尚未連線</span><button data-tab="journeys">我的旅程</button></div></header><div class="shell"><nav id="nav" aria-label="主選單"></nav><main id="main"></main></div><dialog id="modal"><div id="modalBody"></div></dialog><div id="toast" role="status" hidden="">備份已匯出</div><script type="application/json" id="travel-sources">{"groups": ["其他"], "luggage": [], "todo": [], "articles": [], "luggageNote": "", "entryNote": ""}</script><script type="application/json" id="travel-initial">{"version": 3, "activeId": "empty-private", "trips": [{"id": "empty-private", "version": 3, "name": "我的旅程", "destination": "", "people": 1, "currency": "JPY", "days": [{"date": "2026-01-01", "title": "新的一天", "base": "", "start": "09:00", "rows": []}], "info": [], "refs": [], "todo": [], "luggage": [], "luggageGroups": ["其他"], "luggageNote": "", "entryNote": "", "flights": [{"airline": "", "number": "", "date": "", "from": "", "to": "", "depart": "", "arrive": "", "booking": "", "note": ""}, {"airline": "", "number": "", "date": "", "from": "", "to": "", "depart": "", "arrive": "", "booking": "", "note": ""}], "food": []}], "template": {"groups": ["其他"], "items": [], "note": ""}}</script><script type="application/json" id="travel-published-data" data-revision="b96500b9-7320-4ee5-8e31-2c1240b1cc9b">null</script><script type="application/json" id="travel-github-config">null</script><script id="travel-app">'use strict';
 const KEY='travel-private-html-'+document.getElementById('travel-published-data').dataset.revision,LEGACY_KEY='kyoto-travel-v2';
 const tabs=[['cards','🎀','行程'],['ledger','💰','記帳'],['shopping','🛍','購物'],['info','ℹ️','資訊'],['more','•••','更多']];
 const baseTypes=['景點','逛街','交通','餐飲','住宿','其他','其他／行程事項'];
@@ -268,7 +268,7 @@ function pageBack(){return '<div class="page-back no-print"><button data-action=
 function dayPicker(){return `<div class="day-picker"><button data-action="prev-day" aria-label="前一天" ${dayIndex===0?'disabled':''}>‹</button><select aria-label="選擇日期" data-select-day>${state.days.map((d,i)=>`<option value="${i}" ${i===dayIndex?'selected':''}>DAY ${i+1} · ${esc(dateWithWeekday(d.date).slice(5).replace('-','/'))} · ${esc(d.title)}</option>`).join('')}</select><button data-action="next-day" aria-label="後一天" ${dayIndex===state.days.length-1?'disabled':''}>›</button></div>`}
 function captureTableExtras(){return Array.from(document.querySelectorAll('[data-table-id]')).map(el=>({id:el.dataset.tableId,open:!!el.querySelector('details.table-extra')?.open}))}
 function restoreTableExtras(saved){const status=new Map(saved.map(x=>[x.id,x.open]));document.querySelectorAll('[data-table-id]').forEach(el=>{const details=el.querySelector('details.table-extra');if(details&&status.has(el.dataset.tableId))details.open=status.get(el.dataset.tableId)})}
-function render(){const savedTableExtras=captureTableExtras();if(!ghOfflineView&&(!ghReady||!ghToken)){document.body.classList.remove('cc-mode');document.title='私人旅程手帖';$('#tripName').textContent='私人旅程手帖';$('#tripMeta').textContent='授權後讀取私人行程';$('#nav').innerHTML='';$('#main').innerHTML=ghBanner()+githubSettings();autoSize();return}active();if(tab==='book')tab='cards';ccAutoToday();document.title=state.name+'｜旅程手帖';$('#tripName').textContent=state.name;$('#tripMeta').textContent=state.destination||'我的旅程';$('#nav').innerHTML=tabs.map(([id,icon,name])=>`<button data-tab="${id}" class="${id===tab||id==='more'&&['github','flights','refs','backup','journeys','trip','health','budget','schedule','tools','lists','luggage','todo'].includes(tab)?'active':''}"><span>${icon}</span>${name}</button>`).join('');$('#main').innerHTML=ghBanner()+(['github','flights','refs','backup','journeys','trip','health','budget','schedule','tools','lists','luggage','todo'].includes(tab)?pageBack():'')+({ledger:()=>ledgerPage(),trip,schedule,guide,info,shopping,cards:cardsPage,lists:lists,luggage:()=>checklist('luggage'),todo:()=>checklist('todo'),more,tools:travelTools,github:githubSettings,flights,refs,book,backup,journeys,health,budget}[tab]||cardsPage)();restoreTableExtras(savedTableExtras);autoSize();ghReadOnly();document.body.classList.toggle('cc-mode',tab==='cards');ccScrollNext();if(tab==='schedule')requestAnimationFrame(layoutPlanner);if(tab==='guide'||tab==='info')guideTaxCalc()}
+function render(){const savedTableExtras=captureTableExtras();if(!ghOfflineView&&(!ghReady||!ghToken)){document.body.classList.remove('cc-mode');document.title='私人旅程手帖';$('#tripName').textContent='私人旅程手帖';$('#tripMeta').textContent='授權後讀取私人行程';$('#nav').innerHTML='';$('#main').innerHTML=ghBanner()+githubSettings();autoSize();return}active();if(tab==='book')tab='cards';ccAutoToday();document.title=state.name+'｜旅程手帖';$('#tripName').textContent=state.name;$('#tripMeta').textContent=state.destination||'我的旅程';$('#nav').innerHTML=tabs.map(([id,icon,name])=>`<button data-tab="${id}" class="${id===tab||id==='more'&&['github','flights','refs','backup','journeys','trip','health','budget','schedule','tools','lists','luggage','todo','cardrewards'].includes(tab)?'active':''}"><span>${icon}</span>${name}</button>`).join('');$('#main').innerHTML=ghBanner()+(['github','flights','refs','backup','journeys','trip','health','budget','schedule','tools','lists','luggage','todo','cardrewards'].includes(tab)?pageBack():'')+({ledger:()=>ledgerPage(),trip,schedule,guide,info,shopping,cards:cardsPage,lists:lists,luggage:()=>checklist('luggage'),todo:()=>checklist('todo'),more,tools:travelTools,cardrewards:window.ccRewardsPage,github:githubSettings,flights,refs,book,backup,journeys,health,budget}[tab]||cardsPage)();restoreTableExtras(savedTableExtras);autoSize();ghReadOnly();document.body.classList.toggle('cc-mode',tab==='cards');ccScrollNext();if(tab==='schedule')requestAnimationFrame(layoutPlanner);if(tab==='guide'||tab==='info')guideTaxCalc()}
 function cleanTransitLine(s){return String(s).replace(/\*\*/g,'').replace(/^#{1,6}\s*/,'').replace(/\[([^\]]+)\]\([^)]*\)/g,'$1').replace(/https?:\/\/\S+/g,'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').trim()}
 function summarizeGoogleTransit(raw){
  const lines=String(raw||'').replace(/\r/g,'').split(/\n+/).map(cleanTransitLine).filter(Boolean).filter(x=>!/^日本〒/.test(x)&&!/^[-–—]$/.test(x));
@@ -399,7 +399,7 @@ function budget(){
 
 let budgetViewMode='person';
 let budgetDetailSort='date';
-function more(){return `<h2>更多</h2><div class="menu-grid">${[...(tripChecks(state).findings.length?[['health','旅行前總檢查','本機檢查行程、航班、住宿與待辦']]:[]),['tools','旅行工具','日文翻譯卡、美食雷達、天氣與穿著'],['lists','清單','行李準備與待辦事項'],['schedule','時刻表','跨日時間軸、行程調整與 PDF'],['trip','行程編輯','新增、調整與編輯每日行程'],['budget','預算表','門票、交通、飲食分類預算與每日明細'],['github','GitHub 同步','共用資料與手機編輯授權'],['journeys','我的旅程','新增、複製與切換旅行'],['refs','收藏網址','連結與個人筆記'],['backup','備份與轉移','目前旅程或全部旅程']].map(([t,n,s])=>`<button data-tab="${t}" class="menu-card"><strong>${n}</strong><small>${s}</small></button>`).join('')}</div>`}
+function more(){return `<h2>更多</h2><div class="menu-grid">${[...(tripChecks(state).findings.length?[['health','旅行前總檢查','本機檢查行程、航班、住宿與待辦']]:[]),['tools','旅行工具','日文翻譯卡、美食雷達、天氣與穿著'],['cardrewards','信用卡回饋查詢','輸入關鍵字，找出日本回饋最高的卡'],['lists','清單','行李準備與待辦事項'],['schedule','時刻表','跨日時間軸、行程調整與 PDF'],['trip','行程編輯','新增、調整與編輯每日行程'],['budget','預算表','門票、交通、飲食分類預算與每日明細'],['github','GitHub 同步','共用資料與手機編輯授權'],['journeys','我的旅程','新增、複製與切換旅行'],['refs','收藏網址','連結與個人筆記'],['backup','備份與轉移','目前旅程或全部旅程']].map(([t,n,s])=>`<button data-tab="${t}" class="menu-card"><strong>${n}</strong><small>${s}</small></button>`).join('')}</div>`}
 
 const GUIDE_DEFAULTS=[
 ['緊急聯絡與求助',`[[紅:110 警察]]：犯罪、交通事故、暴力事件。\n[[紅:119 救護／消防]]：急病、嚴重受傷、火災。\n[[紅:118 海上保安廳]]：海上事故或落海。\n[[藍:Japan Visitor Hotline：050-3816-2787]]：24小時全年無休，提供中文、英文、韓文協助；生病、災害、事故及旅遊資訊。\n[[橘:外交部旅外國人急難救助：+886-800-085-095]]：海外撥打前確認國際免付費電話支援。\n[[紅:駐大阪辦事處緊急電話：090-8794-4568]]：重大急難事件使用。\n一般電話：06-6227-8623。地址：大阪市北區中之島2丁目3-18 Festival Tower 17、19樓。\n保險公司：＿＿＿＿　保單號碼：＿＿＿＿　海外急難協助：＿＿＿＿\n護照遺失：先報警取得證明，再聯繫駐大阪辦事處。\n生病受傷：輕症就醫；緊急情況119。交通事故：110，必要時119。\n天災：依當地避難指示，聯繫JNTO。遺失行李：先找運輸業者失物窗口。信用卡遺失：立即停卡。`],
@@ -1147,6 +1147,325 @@ document.addEventListener('click',e=>{
  if(b.dataset.ledgerMode){ledgerMode=b.dataset.ledgerMode;render()}
  else if(b.dataset.hubMode){hubMode=b.dataset.hubMode;render()}
  else{hubMode='emerg';go('info')}
+});
+})();
+</script>
+
+<style id="ccr-style">.ccr-box{padding:16px;margin:0 0 14px}
+.ccr-box .field{margin:0 0 8px;font-weight:600}
+.ccr-input{position:relative}
+.ccr-input input{width:100%;padding-right:48px;min-height:48px}
+.ccr-input button{position:absolute;right:2px;top:2px;border:0;background:transparent;min-height:44px;min-width:44px;padding:0;color:var(--muted)}
+.ccr-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.ccr-chip{min-height:36px;padding:6px 12px;border-radius:999px;font-size:.875rem}
+.ccr-chip.selected{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ccr-msg{margin:6px 2px 12px;font-size:.9rem;color:var(--muted)}
+.ccr-msg.none{color:#8a4b00;background:var(--orange);padding:10px 12px;border-radius:10px}
+.ccr-card{display:flex;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 12px}
+.ccr-card.top{border-color:var(--accent);box-shadow:0 0 0 2px rgba(220,102,86,.18)}
+.ccr-rank{flex:0 0 30px;height:30px;border-radius:50%;background:var(--bg);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:.9rem}
+.ccr-card.top .ccr-rank{background:var(--accent);color:#fff}
+.ccr-body{min-width:0;flex:1}
+.ccr-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.ccr-name{min-width:0}
+.ccr-name strong{display:block;font-size:1.05rem;overflow-wrap:anywhere}
+.ccr-name small{color:var(--muted);font-size:.85rem}
+.ccr-rate{flex:0 0 auto;text-align:right;font-size:1.6rem;font-weight:800;line-height:1.1;color:var(--accent)}
+.ccr-rate small{display:block;font-size:.72rem;font-weight:600;color:var(--muted)}
+.ccr-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 6px}
+.ccr-tag{font-size:.75rem;padding:3px 8px;border-radius:999px;background:var(--bg);color:var(--muted);font-weight:600}
+.ccr-tag.store{background:var(--blue);color:#1d4f9a}.ccr-tag.gen{background:var(--purple);color:#4b3fa0}
+.ccr-tag.on{background:var(--green);color:#216a4d}.ccr-tag.off{text-decoration:line-through;opacity:.7}
+.ccr-tag.warn{background:var(--orange);color:#8a4b00}
+.ccr-cat{margin:6px 0 2px;font-weight:600}
+.ccr-hit{margin:2px 0 6px;font-size:.85rem;color:#216a4d}
+.ccr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin:10px 0 4px}
+.ccr-grid dt{font-size:.75rem;color:var(--muted)}.ccr-grid dd{margin:0;font-size:.9rem;overflow-wrap:anywhere}
+.ccr-more{margin-top:8px;font-size:.875rem}
+.ccr-more summary{cursor:pointer;color:var(--muted);padding:6px 0}
+.ccr-more h4{margin:8px 0 2px;font-size:.8rem;color:var(--muted)}
+.ccr-more p{margin:0;white-space:pre-wrap;line-height:1.6}
+.ccr-body>.ccr-src{margin:6px 0 0;font-size:.72rem;color:var(--muted)}
+@media(max-width:520px){.ccr-card{padding:12px;gap:8px}.ccr-rank{flex-basis:26px;height:26px}.ccr-rate{font-size:1.4rem}}
+.ccr-stores{background:#e7f0ff;border:1px solid #b6cff7;border-left:6px solid #2f6fdb;border-radius:10px;padding:10px 12px;margin:10px 0 6px}
+.ccr-stores-t{font-size:.8rem;font-weight:700;color:#1d4f9a;margin-bottom:4px}
+.ccr-stores-b{font-size:1.02rem;font-weight:700;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink)}
+.ccr-stores.gen{background:#f4f3fa;border-color:#dcd8f0;border-left-color:#8c82d6}
+.ccr-stores.gen .ccr-stores-t{color:#4b3fa0}.ccr-stores.gen .ccr-stores-b{font-size:.9rem;font-weight:500}
+.ccr-stores mark{background:#ffd95a;color:inherit;padding:0 3px;border-radius:4px}
+.ccr-filters{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.ccr-fl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px}
+.ccr-fl>b{font-size:.8rem;color:var(--muted);min-width:3em}
+.ccr-fl .ccr-chips{margin:0;flex:1}
+.ccr-fl .segmented{margin:0;flex-wrap:wrap}.ccr-fl .segmented button{min-height:38px;padding:6px 12px}
+.ccr-ex{flex:1;min-width:0;min-height:44px}
+.ccr-calc{margin:10px 0 4px;padding:10px 12px;border:1px dashed var(--line);border-radius:10px;background:#fbfbfc}
+.ccr-calc label{display:flex;flex-direction:column;gap:6px;font-size:.8rem;color:var(--muted);font-weight:600}
+.ccr-calc input{width:100%;min-height:44px;font-weight:700}
+.ccr-calc-out{margin-top:8px}
+.ccr-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;padding:4px 0;border-top:1px solid #eef0f3;font-size:.9rem}
+.ccr-line:first-child{border-top:0}
+.ccr-line span{color:var(--muted);flex:0 0 auto}.ccr-line b{margin-left:auto;text-align:right}
+.ccr-line small{flex:1 0 100%;text-align:right;color:var(--muted);font-size:.75rem}
+.ccr-line.bad b{color:#af3636}.ccr-line.plan{background:var(--green);border-radius:8px;padding:6px 8px;margin-top:6px;border-top:0}
+.ccr-note{font-size:.78rem;color:var(--muted);margin-top:6px;line-height:1.5}.ccr-note.warn{color:#8a4b00;background:var(--orange);padding:6px 8px;border-radius:8px}
+.ccr-sum{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:12px;padding:12px 14px;margin:0 0 12px}
+.ccr-sum div{display:flex;flex-direction:column;gap:2px}.ccr-sum span{font-size:.85rem;opacity:.85}
+.ccr-sum button{min-height:36px;padding:6px 12px;font-size:.8rem}
+</style>
+<script type="application/json" id="ccr-data">{"rows": [{"n": 2, "card": "台新 Richart 卡", "brand": "VISA", "plan": "玩旅刷", "cat": "日本實體/線上", "stores": "日本當地實體店家和請款國別為日本之線上刷卡一般消費", "total": 0.033, "totalTxt": "3.3%", "base": "0.3%", "bonus": "3%", "cap": "無上限", "bonusCap": "無上限", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "台幣", "phys": 1, "onl": 1, "sw": "切換「玩旅刷」", "fee": "1.5%", "note": "", "type": "general", "kw": ["實體", "線上", "日本實體", "日本線上", "一般消費", "全通路", "日本當地店家"], "flag": "", "baseRate": 0.003, "bonusRate": 0.03, "spendCapNum": null, "bonusCapNum": null, "group": "r2"}, {"n": 3, "card": "台新 Richart 卡", "brand": "VISA", "plan": "玩旅刷", "cat": "交通儲值", "stores": "SUICA儲值、ICOCA儲值、PASMO儲值、WOWPASS儲值、AIRSIM、Uber (外幣交易)、Grab", "total": 0.033, "totalTxt": "3.3%", "base": "0.3%", "bonus": "3%", "cap": "無上限", "bonusCap": "無上限", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "台幣", "phys": 0, "onl": 1, "sw": "切換「玩旅刷」", "fee": "1.5%", "note": "", "type": "store", "kw": ["SUICA", "西瓜卡", "ICOCA", "PASMO", "WOWPASS", "AIRSIM", "Uber", "Grab", "交通儲值", "儲值", "交通", "計程車", "叫車"], "flag": "", "baseRate": 0.003, "bonusRate": 0.03, "spendCapNum": null, "bonusCapNum": null, "group": "r3"}, {"n": 4, "card": "台新 Richart 卡", "brand": "VISA", "plan": "玩旅刷", "cat": "國內旅遊平台", "stores": "Klook、Kkday", "total": 0.033, "totalTxt": "3.3%", "base": "0.3%", "bonus": "3%", "cap": "無上限", "bonusCap": "無上限", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "台幣", "phys": 0, "onl": 1, "sw": "切換「玩旅刷」", "fee": "免收", "note": "", "type": "store", "kw": ["Klook", "客路", "Kkday", "旅遊平台", "旅遊", "票券"], "flag": "", "baseRate": 0.003, "bonusRate": 0.03, "spendCapNum": null, "bonusCapNum": null, "group": "r4"}, {"n": 5, "card": "台新 Richart 卡", "brand": "VISA", "plan": "Pay著刷-台新Pay+", "cat": "日本 TWQR 掃碼通路", "stores": "日本 LAWSON 便利商店、日本 BicCamera 家電賣場", "total": 0.038, "totalTxt": "3.8%", "base": "0.3%", "bonus": "3.5%", "cap": "無上限", "bonusCap": "無上限", "pay": "限台新Pay", "cycle": "當期帳單", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "切換「Pay著刷」", "fee": "免收", "note": "1.須使用台新Pay+ 掃碼支付\n2.實際扣款金額以交易當下匯率換算之新臺幣金額為準", "type": "store", "kw": ["LAWSON", "羅森", "便利商店", "便利店", "BicCamera", "Bic Camera", "家電", "家電賣場", "TWQR", "掃碼", "台新Pay"], "flag": "", "baseRate": 0.003, "bonusRate": 0.035, "spendCapNum": null, "bonusCapNum": null, "group": "r5"}, {"n": 6, "card": "玉山 Unicard", "brand": "VISA", "plan": "百大", "cat": "日本實體", "stores": "日本當地實體商店", "total": 0.045, "totalTxt": "4.5%", "base": "0.3%+0.7%", "bonus": "3.5%", "cap": "台幣 142,857元", "bonusCap": "5000點(百大共用)", "pay": "實體卡/線上卡號/AP", "cycle": "當月", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "UP選", "fee": "1.5%", "note": "", "type": "general", "kw": ["實體", "日本實體", "百大", "日本當地實體商店"], "flag": "", "baseRate": 0.01, "bonusRate": 0.035, "spendCapNum": 142857.0, "bonusCapNum": 5000.0, "group": "unicard-100"}, {"n": 7, "card": "玉山 Unicard", "brand": "VISA", "plan": "百大", "cat": "國內旅遊平台", "stores": "KKday、Klook", "total": 0.045, "totalTxt": "4.5%", "base": "0.3%+0.7%", "bonus": "3.5%", "cap": "台幣 142,857元", "bonusCap": "5000點(百大共用)", "pay": "實體卡/線上卡號/AP", "cycle": "當月", "ccy": "台幣", "phys": 0, "onl": 1, "sw": "UP選", "fee": "免收", "note": "Kkday、Klook 限國內消費且新台幣結帳", "type": "store", "kw": ["KKday", "Klook", "客路", "旅遊平台", "旅遊", "票券"], "flag": "", "baseRate": 0.01, "bonusRate": 0.035, "spendCapNum": 142857.0, "bonusCapNum": 5000.0, "group": "unicard-100"}, {"n": 8, "card": "玉山熊本熊卡", "brand": "JCB", "plan": "一般消費", "cat": "日本實體/線上", "stores": "日本當地實體店家和請款國別為日本之線上刷卡一般消費", "total": 0.025, "totalTxt": "2.5%", "base": "2.5%", "bonus": "0%", "cap": "無上限", "bonusCap": "無上限", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "日幣", "phys": 1, "onl": 1, "sw": "否", "fee": "1.5%", "note": "1. 綁定玉山Wallet於日本PayPay消費不享回饋\n2. 雙幣卡於國外消費以日圓繳款", "type": "general", "kw": ["實體", "線上", "日本實體", "日本線上", "一般消費", "全通路"], "flag": "", "baseRate": 0.025, "bonusRate": 0.0, "spendCapNum": null, "bonusCapNum": null, "group": "r8"}, {"n": 9, "card": "玉山熊本熊卡", "brand": "JCB", "plan": "指定加碼", "cat": "交通儲值", "stores": "SUICA、PASMO、ICOCA", "total": 0.085, "totalTxt": "8.5%", "base": "2.5%", "bonus": "6%", "cap": "台幣 8,333元", "bonusCap": "500元(指定加碼共用)", "pay": "AP", "cycle": "當期帳單", "ccy": "日幣", "phys": 0, "onl": 1, "sw": "否", "fee": "1.5%", "note": "1.基本回饋已包含一般消費-日本實體/線上2.5%", "type": "store", "kw": ["SUICA", "西瓜卡", "PASMO", "ICOCA", "交通儲值", "儲值", "交通"], "flag": "", "baseRate": 0.025, "bonusRate": 0.06, "spendCapNum": 8333.0, "bonusCapNum": 500.0, "group": "kumamon-bonus"}, {"n": 10, "card": "玉山熊本熊卡", "brand": "JCB", "plan": "指定加碼", "cat": "美食餐飲", "stores": "勝烈亭、敘敘苑、牛角、力丸燒肉、六歌仙燒肉、shake shack、DOUTOR Coffee、Fuglen、鳥貴族、一蘭拉麵、松屋、SUKIYA、壽司郎、藏壽司、人形町今半", "total": 0.085, "totalTxt": "8.5%", "base": "2.5%", "bonus": "6%", "cap": "台幣 8,333元", "bonusCap": "500元(指定加碼共用)", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "日幣", "phys": 1, "onl": 1, "sw": "否", "fee": "1.5%", "note": "1. 若指定店家設立於百貨公司、飯店、賣場、商場、車站及美食街致帳單名稱無法判別者不列入加碼\n2.不含玉山Wallet於PayPay之消費\n3.基本回饋已包含一般消費-日本實體/線上2.5%", "type": "store", "kw": ["美食", "餐飲", "餐廳", "勝烈亭", "敘敘苑", "牛角", "力丸燒肉", "六歌仙燒肉", "燒肉", "shake shack", "DOUTOR", "咖啡", "Fuglen", "鳥貴族", "串燒", "一蘭", "一蘭拉麵", "拉麵", "松屋", "SUKIYA", "壽司郎", "藏壽司", "壽司", "迴轉壽司", "人形町今半", "牛丼"], "flag": "", "baseRate": 0.025, "bonusRate": 0.06, "spendCapNum": 8333.0, "bonusCapNum": 500.0, "group": "kumamon-bonus"}, {"n": 11, "card": "玉山熊本熊卡", "brand": "JCB", "plan": "指定加碼", "cat": "家電/藥妝/生活/商場/服飾", "stores": "BicCamera、Yodobashi、松本清、唐吉軻德、大國藥妝、無印良品、日本MITSUI購物園區、LaLaport購物園區、UNIQLO、GU、Montbell、Alpen", "total": 0.085, "totalTxt": "8.5%", "base": "2.5%", "bonus": "6%", "cap": "台幣 8,333元", "bonusCap": "500元(指定加碼共用)", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "日幣", "phys": 1, "onl": 1, "sw": "否", "fee": "1.5%", "note": "1. 若指定店家設立於百貨公司、飯店、賣場、商場、車站及美食街致帳單名稱無法判別者不列入加碼\n2.不含玉山Wallet於PayPay之消費\n3.基本回饋已包含一般消費-日本實體/線上2.5%", "type": "store", "kw": ["家電", "藥妝", "生活", "商場", "服飾", "BicCamera", "Bic Camera", "Yodobashi", "淀橋", "松本清", "唐吉訶德", "唐吉軻德", "驚安殿堂", "Donki", "大國藥妝", "無印良品", "MUJI", "MITSUI", "三井", "LaLaport", "UNIQLO", "優衣庫", "GU", "Montbell", "Alpen", "購物園區"], "flag": "", "baseRate": 0.025, "bonusRate": 0.06, "spendCapNum": 8333.0, "bonusCapNum": 500.0, "group": "kumamon-bonus"}, {"n": 12, "card": "星展 eco 永續極簡卡", "brand": "mastercard", "plan": "指定加碼", "cat": "日本實體", "stores": "日本當地實體店", "total": 0.05, "totalTxt": "5%", "base": "1%", "bonus": "4%", "cap": "台幣 15,000元", "bonusCap": "600點", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "否", "fee": "1.5%", "note": "", "type": "general", "kw": ["實體", "日本實體", "日本當地實體店"], "flag": "", "baseRate": 0.01, "bonusRate": 0.04, "spendCapNum": 15000.0, "bonusCapNum": 600.0, "group": "r12"}, {"n": 13, "card": "星展傳說對決聯名卡", "brand": "VISA", "plan": "指定加碼", "cat": "日本實體", "stores": "日本當地實體店", "total": 0.05, "totalTxt": "5%", "base": "1%", "bonus": "4%", "cap": "台幣 12,500元", "bonusCap": "台幣 500點", "pay": "實體卡/線上卡號/AP", "cycle": "當月", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "否", "fee": "1.5%", "note": "", "type": "general", "kw": ["實體", "日本實體", "日本當地實體店"], "flag": "", "baseRate": 0.01, "bonusRate": 0.04, "spendCapNum": 12500.0, "bonusCapNum": 500.0, "group": "r13"}, {"n": 14, "card": "國泰 CUBE 卡", "brand": "MasterCard", "plan": "秋日遊", "cat": "日本實體", "stores": "日本當地實體店", "total": 0.035, "totalTxt": "3.5%", "base": "0.3%", "bonus": "3.2%", "cap": "無上限", "bonusCap": "無上限", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "切換「秋日遊」", "fee": "1.5%", "note": "", "type": "general", "kw": ["實體", "日本實體", "日本當地實體店"], "flag": "", "baseRate": 0.003, "bonusRate": 0.032, "spendCapNum": null, "bonusCapNum": null, "group": "r14"}, {"n": 15, "card": "國泰 CUBE 卡", "brand": "MasterCard", "plan": "秋日遊", "cat": "機場免稅店", "stores": "關西機場指定免稅店 (KIX DUTY FREE、TRK ARRIVAL Duty Free Shop、關西旅日記)", "total": 0.04, "totalTxt": "4%", "base": "0.3%", "bonus": "3.7%", "cap": "無上限", "bonusCap": "無上限", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "切換「秋日遊」", "fee": "1.5%", "note": "不含店中櫃與線上預購(實體領貨也不可)", "type": "store", "kw": ["機場", "關西機場", "KIX", "免稅", "免稅店", "KIX DUTY FREE", "TRK ARRIVAL", "關西旅日記", "Duty Free"], "flag": "", "baseRate": 0.003, "bonusRate": 0.037, "spendCapNum": null, "bonusCapNum": null, "group": "r15"}, {"n": 16, "card": "國泰 CUBE 卡", "brand": "MasterCard", "plan": "秋日遊", "cat": "指定加碼", "stores": "日本愛電王", "total": 0.102, "totalTxt": "10.2%", "base": "3.5%", "bonus": "6.7%", "cap": "台幣5970元", "bonusCap": "400點", "pay": "實體卡/線上卡號/AP", "cycle": "當月", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "切換「秋日遊」", "fee": "1.5%", "note": "不含EDION蔦屋家電與通信服務EDION NET", "type": "store", "kw": ["愛電王", "EDION", "家電"], "flag": "", "baseRate": 0.035, "bonusRate": 0.067, "spendCapNum": 5970.0, "bonusCapNum": 400.0, "group": "r16"}, {"n": 17, "card": "國泰 CUBE 卡", "brand": "MasterCard", "plan": "秋日遊", "cat": "指定加碼", "stores": "寶可夢中心 ：寶可夢中心大阪店（LUCUA SOUTH）、寶可夢中心京都店（SUINA室町）\nSANRIO三麗鷗 ：京都店、心齋橋店、難波戎橋店\nKIDDY LAND：京都四條河原町店\n3COINS：大阪3COINS LINKS UMEDA店、京都3COINS京都寺町店\nUNIQLO實體門市、ABC-MART實體門市、Loft實體門市 (含COSME LOFT)、3COINS、Alpen Group實體門市 \n請特別注意回饋不含百貨及商場門市，為避免風險，請找獨立路面店比較保險，不要在百貨商場中的！", "total": 0.05, "totalTxt": "5%", "base": "0.3%", "bonus": "4.7%", "cap": "無上限", "bonusCap": "無上限", "pay": "實體卡/線上卡號/AP", "cycle": "當期帳單", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "切換「秋日遊」", "fee": "1.5%", "note": "不含百貨及商場門市、店中櫃、線上購物與非常態快閃店", "type": "store", "kw": ["寶可夢", "寶可夢中心", "Pokemon", "SANRIO", "三麗鷗", "KIDDY LAND", "Kiddyland", "3COINS", "UNIQLO", "優衣庫", "ABC-MART", "Loft", "COSME LOFT", "Alpen", "Alpen Group", "玩具", "雜貨"], "flag": "", "baseRate": 0.003, "bonusRate": 0.047, "spendCapNum": null, "bonusCapNum": null, "group": "r17"}, {"n": 18, "card": "國泰 CUBE 卡", "brand": "MasterCard", "plan": "秋日遊", "cat": "美食餐飲", "stores": "Tabelog、TableCheck、OMAKASE", "total": 0.05, "totalTxt": "5%", "base": "0.3%", "bonus": "4.7%", "cap": "無上限", "bonusCap": "無上限", "pay": "線上卡號/AP", "cycle": "當期帳單", "ccy": "台幣", "phys": 0, "onl": 1, "sw": "切換「秋日遊」且需領券", "fee": "1.5%", "note": "餐廳預約平台須於預訂時完成平台線上扣款，現場付費不適用", "type": "store", "kw": ["Tabelog", "食べログ", "TableCheck", "OMAKASE", "餐廳", "餐廳預約", "預約", "美食"], "flag": "", "baseRate": 0.003, "bonusRate": 0.047, "spendCapNum": null, "bonusCapNum": null, "group": "r18"}, {"n": 19, "card": "國泰 CUBE 卡", "brand": "MasterCard", "plan": "秋日遊", "cat": "交通儲值", "stores": "SUICA、PASMO、ICOCA", "total": 0.05, "totalTxt": "5%", "base": "0.3%", "bonus": "4.7%", "cap": "台幣 13,333元", "bonusCap": "200點", "pay": "AP", "cycle": "當月", "ccy": "台幣", "phys": 0, "onl": 1, "sw": "切換「秋日遊」", "fee": "1.5%", "note": "", "type": "store", "kw": ["SUICA", "西瓜卡", "PASMO", "ICOCA", "交通儲值", "儲值", "交通"], "flag": "", "baseRate": 0.003, "bonusRate": 0.047, "spendCapNum": 13333.0, "bonusCapNum": 200.0, "group": "r19"}, {"n": 20, "card": "國泰 CUBE 卡", "brand": "MasterCard", "plan": "秋日遊", "cat": "交通儲值", "stores": "GO Taxi App", "total": 0.035, "totalTxt": "3.5%", "base": "0.3%", "bonus": "3.2%", "cap": "無上限", "bonusCap": "無上限", "pay": "線上卡號", "cycle": "當期帳單", "ccy": "台幣", "phys": 0, "onl": 1, "sw": "切換「秋日遊」且需領券", "fee": "1.5%", "note": "GO Taxi App(日本叫車App)應用程式，特約商店與收單機構登錄之特約商店名為含「GO TAXI」、「GO App」之線上交易", "type": "store", "kw": ["GO Taxi", "GOTaxi", "GO App", "計程車", "叫車", "交通"], "flag": "", "baseRate": 0.003, "bonusRate": 0.032, "spendCapNum": null, "bonusCapNum": null, "group": "r20"}, {"n": 21, "card": "聯邦吉鶴卡", "brand": "JCB", "plan": "一般消費", "cat": "日本實體/線上", "stores": "日本當地實體店家和請款國別為日本之線上刷卡一般消費", "total": 0.025, "totalTxt": "2.5%", "base": "2.5%", "bonus": "0%", "cap": "無上限", "bonusCap": "無上限", "pay": "實體卡/線上卡號/AP", "cycle": "當月", "ccy": "台幣", "phys": 1, "onl": 1, "sw": "否", "fee": "1.5%", "note": "消費請款幣別需為日圓 (JPY)", "type": "general", "kw": ["實體", "線上", "日本實體", "日本線上", "一般消費", "全通路"], "flag": "", "baseRate": 0.025, "bonusRate": 0.0, "spendCapNum": null, "bonusCapNum": null, "group": "r21"}, {"n": 22, "card": "聯邦吉鶴卡", "brand": "JCB", "plan": "行動支付登錄加碼", "cat": "日本實體", "stores": "日本當地實體店家", "total": 0.04, "totalTxt": "4%", "base": "2.5%", "bonus": "1.5%", "cap": "台幣40,000元", "bonusCap": "600元", "pay": "實體卡/線上卡號/AP", "cycle": "當月", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "否", "fee": "1.5%", "note": "1.單筆消費滿NT$100\n2.基本回饋已包含一般消費-日本實體/線上2.5%", "type": "general", "kw": ["實體", "日本實體", "行動支付", "行動支付登錄", "日本當地實體店家"], "flag": "", "baseRate": 0.025, "bonusRate": 0.015, "spendCapNum": 40000.0, "bonusCapNum": 600.0, "group": "r22"}, {"n": 23, "card": "聯邦吉鶴卡", "brand": "JCB", "plan": "額外加碼", "cat": "便利商店/百貨公司/家電", "stores": "7-ELEVEN、FamilyMart、LAWSON\n永旺 (AEON)、三越 (MITSUKOSHI)、高島屋 (TAKASHIMAYA)\nBIC CAMERA、Yodobashi、唐吉訶德", "total": 0.055, "totalTxt": "5.5%", "base": "2.5%", "bonus": "3%", "cap": "台幣 20,000元", "bonusCap": "600元", "pay": "", "cycle": "活動期間累計(7~12月)", "ccy": "台幣", "phys": 1, "onl": 0, "sw": "否", "fee": "1.5%", "note": "1.需為實體門市現場交易\n2.基本回饋已包含一般消費-日本實體/線上2.5%", "type": "store", "kw": ["7-ELEVEN", "7-11", "711", "小七", "便利商店", "便利店", "FamilyMart", "全家", "LAWSON", "羅森", "永旺", "AEON", "三越", "MITSUKOSHI", "高島屋", "TAKASHIMAYA", "百貨", "百貨公司", "BIC CAMERA", "BicCamera", "Yodobashi", "淀橋", "唐吉訶德", "唐吉軻德", "驚安殿堂", "Donki", "家電"], "flag": "", "baseRate": 0.025, "bonusRate": 0.03, "spendCapNum": 20000.0, "bonusCapNum": 600.0, "group": "r23"}], "chips": ["實體", "線上", "寶可夢", "7-11", "全家", "LAWSON", "唐吉訶德", "UNIQLO", "藥妝", "家電", "餐廳", "Suica", "Klook", "免稅", "計程車", "百貨", "三麗鷗", "3COINS"], "cardChips": [["Richart", "Richart"], ["Unicard", "Unicard"], ["熊本熊", "熊本熊"], ["星展 eco", "eco"], ["傳說對決", "傳說對決"], ["CUBE", "CUBE"], ["吉鶴", "吉鶴"]]}</script>
+<script id="ccr-core">(function(root){
+'use strict';
+var PHYS=['實體','日本實體','實體店','實體店面','實體門市','實體店家','店面'];
+var ONL=['線上','日本線上','網購','網路','網路購物','線上購物'];
+function norm(s){return String(s==null?'':s).normalize('NFKC').toLowerCase().replace(/軻/g,'訶').replace(/臺/g,'台').replace(/[\s\-‐‑–—_・･·.,，、:：;；'"“”‘’()（）\[\]【】!！?？\/\\+]+/g,'')}
+var PHYSN=PHYS.map(norm),ONLN=ONL.map(norm);
+function parse(q){
+  var terms=String(q||'').split(/[\s,，、;；]+/).map(norm).filter(Boolean),p={words:[],phys:false,onl:false};
+  terms.forEach(function(t){if(PHYSN.indexOf(t)>=0)p.phys=true;else if(ONLN.indexOf(t)>=0)p.onl=true;else p.words.push(t)});
+  return p;
+}
+function prep(rows){
+  rows.forEach(function(r){
+    r._kwn=r.kw.map(norm);r._cardn=norm(r.card+' '+r.brand+' '+r.plan);
+    r._hay=norm(r.kw.join(' ')+' '+r.card+' '+r.plan+' '+r.cat+' '+r.stores);
+  });
+  return rows;
+}
+function hitLabels(r,words){
+  var out=[];
+  words.forEach(function(w){
+    for(var i=0;i<r._kwn.length;i++){if(r._kwn[i].indexOf(w)>=0){if(out.indexOf(r.kw[i])<0)out.push(r.kw[i]);return}}
+    if(out.indexOf('店家／通路欄位')<0)out.push('店家／通路欄位');
+  });
+  return out;
+}
+function parseEx(str){
+  var ex={words:[],phys:false,onl:false};
+  String(str||'').split(/[\s,，、;；]+/).map(norm).filter(Boolean).forEach(function(t){
+    if(PHYSN.indexOf(t)>=0)ex.phys=true;else if(ONLN.indexOf(t)>=0)ex.onl=true;else ex.words.push(t);
+  });
+  return ex;
+}
+function search(rows,q,o){
+  o=o||{};
+  var p=parse(q),ex=parseEx(o.exclude);
+  if(o.chan==='phys')p.phys=true;if(o.chan==='onl')p.onl=true;
+  var chanOK=function(r){return (!p.phys||r.phys===1)&&(!p.onl||r.onl===1)};
+  var picked=[],seen={},mode;
+  function add(r,tag,hits){if(seen[r.n])return;seen[r.n]=1;picked.push({r:r,tag:tag,hits:hits||[]})}
+  var cardWords=p.words.filter(function(w){return rows.some(function(r){return r._cardn.indexOf(w)>=0})});
+  var otherWords=p.words.filter(function(w){return cardWords.indexOf(w)<0});
+  if(cardWords.length){
+    mode='card';
+    rows.forEach(function(r){
+      if(!chanOK(r))return;
+      if(!cardWords.every(function(w){return r._cardn.indexOf(w)>=0}))return;
+      if(!otherWords.every(function(w){return r._hay.indexOf(w)>=0}))return;
+      add(r,r.type,otherWords.length?hitLabels(r,otherWords):[]);
+    });
+  }else if(!p.words.length){
+    mode=(p.phys||p.onl)?'channel':'all';
+    rows.filter(chanOK).forEach(function(r){add(r,r.type)});
+  }else{
+    var hit=rows.filter(function(r){return chanOK(r)&&p.words.every(function(w){return r._hay.indexOf(w)>=0})});
+    var storeHits=hit.filter(function(r){return r.type==='store'});
+    hit.forEach(function(r){add(r,r.type,hitLabels(r,p.words))});
+    var fbPhys=!p.onl&&storeHits.some(function(r){return r.phys===1});
+    var fbOnl=p.onl&&storeHits.some(function(r){return r.onl===1});
+    rows.forEach(function(r){
+      if(r.type!=='general'||!chanOK(r))return;
+      if((fbPhys&&r.phys===1)||(fbOnl&&r.onl===1))add(r,'general',['通用（不限店家）']);
+    });
+    if(storeHits.length)mode='store';
+    else if(hit.length)mode='generalHit';
+    else{
+      mode='none';
+      rows.forEach(function(r){if(r.type==='general'&&chanOK(r))add(r,'general',['通用（不限店家）'])});
+    }
+  }
+  picked=picked.filter(function(x){
+    if(o.type==='store'&&x.tag!=='store')return false;
+    if(o.type==='general'&&x.tag!=='general')return false;
+    if(ex.phys&&x.r.phys===1)return false;
+    if(ex.onl&&x.r.onl===1)return false;
+    return !ex.words.some(function(w){return x.r._hay.indexOf(w)>=0});
+  });
+  picked.sort(function(a,b){
+    if(b.r.total!==a.r.total)return b.r.total-a.r.total;
+    if(a.tag!==b.tag)return a.tag==='store'?-1:1;
+    return a.r.n-b.r.n;
+  });
+  return {mode:mode,p:p,ex:ex,list:picked};
+}
+var GROUPS=[['7-11','7-eleven','711','小七','セブン'],['全家','familymart','ファミマ'],['lawson','羅森','ローソン'],['唐吉訶德','唐吉軻德','驚安殿堂','donki'],['uniqlo','優衣庫'],['寶可夢','pokemon','ポケモン'],['三麗鷗','sanrio'],['suica','西瓜卡'],['klook','客路'],['bic camera','biccamera'],['愛電王','edion'],['永旺','aeon'],['三越','mitsukoshi'],['高島屋','takashimaya'],['松本清','matsukiyo'],['無印良品','muji'],['免稅','duty free'],['計程車','taxi'],['壽司','寿司']];
+function tokens(q){
+  var out=[];
+  String(q||'').split(/[\s,，、;；]+/).filter(Boolean).forEach(function(raw){
+    var n=norm(raw);
+    if(PHYSN.indexOf(n)>=0||ONLN.indexOf(n)>=0)return;
+    out.push(raw);
+    GROUPS.forEach(function(g){
+      if(g.some(function(m){var mn=norm(m);return mn===n||mn.indexOf(n)>=0}))out=out.concat(g);
+    });
+  });
+  out.slice().forEach(function(t){if(/訶/.test(t))out.push(t.replace(/訶/g,'軻'));if(/軻/.test(t))out.push(t.replace(/軻/g,'訶'))});
+  var u={};return out.filter(function(t){var k=t.toLowerCase();if(!t||u[k])return false;u[k]=1;return true});
+}
+function limitOf(r){
+  var a=r.spendCapNum==null?Infinity:r.spendCapNum,b=(r.bonusCapNum==null||!r.bonusRate)?Infinity:r.bonusCapNum/r.bonusRate;
+  return {a:a,b:b,L:Math.min(a,b),incon:isFinite(a)&&isFinite(b)&&Math.abs(a-b)/a>0.05};
+}
+function calc(rows,spent){
+  var g={},res={};
+  rows.forEach(function(r){var s=Math.max(0,+spent[r.n]||0),o=g[r.group]||(g[r.group]={S:0,rows:[]});o.S+=s;o.rows.push(r)});
+  rows.forEach(function(r){
+    var s=Math.max(0,+spent[r.n]||0),o=g[r.group],lim=limitOf(r),used=Math.min(o.S,lim.L),gb=used*r.bonusRate;
+    var bonusR=o.S>0?s/o.S*gb:0,baseR=s*r.baseRate;
+    res[r.n]={spent:s,S:o.S,limit:lim.L,limA:lim.a,limB:lim.b,incon:lim.incon,groupRows:o.rows.length,groupCats:o.rows.map(function(x){return x.cat}),
+      baseR:baseR,bonusR:bonusR,reward:baseR+bonusR,groupBonus:gb,over:Math.max(0,o.S-lim.L),remain:lim.L===Infinity?Infinity:Math.max(0,lim.L-o.S)};
+  });
+  return res;
+}
+function plan(r,c,p){var el=Math.min(p,c.remain),rw=p*r.baseRate+el*r.bonusRate;return {reward:rw,rate:p?rw/p:0,over:Math.max(0,p-el)}}
+function pct(t){return String(Math.round(t*10000)/100)+'%'}
+root.CCR={norm:norm,parse:parse,prep:prep,search:search,tokens:tokens,calc:calc,plan:plan,pct:pct};
+if(typeof module!=='undefined')module.exports=root.CCR;
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script id="ccr-page">(function(){
+'use strict';
+var DATA=JSON.parse(document.getElementById('ccr-data').textContent);
+var ROWS=CCR.prep(DATA.rows),CHIPS=DATA.chips,CARDS=DATA.cardChips;
+var query='',fType='all',fChan='all',fEx='',spent={},plan='',fx='',sortBy='rate';
+var SK='ccr-spent-v1',PK='ccr-prefs-v1';
+try{spent=JSON.parse(localStorage.getItem(SK)||'{}')||{}}catch(x){spent={}}
+try{var pf=JSON.parse(localStorage.getItem(PK)||'{}')||{};plan=pf.plan||'';fx=pf.fx||''}catch(x){}
+function saveS(){try{localStorage.setItem(SK,JSON.stringify(spent))}catch(x){}}
+function saveP(){try{localStorage.setItem(PK,JSON.stringify({plan:plan,fx:fx}))}catch(x){}}
+function num(v){var n=parseFloat(String(v==null?'':v).replace(/,/g,''));return isFinite(n)&&n>0?n:0}
+function money(n){return 'NT$ '+Math.round(n).toLocaleString('en-US')}
+function jpy(n){var f=num(fx);return f?'（約 ¥'+Math.round(n/f).toLocaleString('en-US')+'）':''}
+function byN(n){return ROWS.filter(function(r){return r.n===n})[0]}
+var TYPES=[['all','全部'],['store','只看指定店家'],['general','只看通用（不限店家）']];
+var CHANS=[['all','不限'],['phys','實體'],['onl','線上']];
+function e(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function esc(t){return t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function hl(text,toks){
+  if(!toks.length)return e(text);
+  var re=new RegExp(toks.slice().sort(function(a,b){return b.length-a.length}).map(esc).join('|'),'gi'),out='',last=0,m;
+  while((m=re.exec(text))){if(!m[0]){re.lastIndex++;continue}out+=e(text.slice(last,m.index))+'<mark>'+e(m[0])+'</mark>';last=m.index+m[0].length}
+  return out+e(text.slice(last));
+}
+function cell(label,val){return val?'<div><dt>'+e(label)+'</dt><dd>'+e(val)+'</dd></div>':''}
+function line(a,b,c,cls){return '<div class="ccr-line'+(cls?' '+cls:'')+'"><span>'+a+'</span><b>'+b+'</b>'+(c?'<small>'+c+'</small>':'')+'</div>'}
+function calcOut(r,c){
+  var h='',pl=num(plan);
+  h+=line('預估已得回饋',money(c.reward),c.spent>0?'基本 '+money(c.baseR)+'＋加碼 '+money(c.bonusR):'');
+  if(c.limit===Infinity)h+=line('加碼額度','無上限','可持續累計');
+  else{
+    h+=line('加碼額度','已用 '+money(Math.min(c.S,c.limit))+' ／ '+money(c.limit),'');
+    h+=line('尚可消費（享加碼）',c.remain>0?money(c.remain)+jpy(c.remain):'已達上限','',c.remain>0?'':'bad');
+  }
+  if(c.groupRows>1)h+='<div class="ccr-note">與同組 '+c.groupRows+' 列共用上限（'+c.groupCats.map(e).join('、')+'），同組已花費合計 '+money(c.S)+'</div>';
+  if(c.over>0)h+='<div class="ccr-note warn">已超過加碼上限 '+money(c.over)+'，超出部分只享基本回饋 '+e(r.base)+'</div>';
+  if(c.incon)h+='<div class="ccr-note warn">表列「消費上限」'+money(c.limA)+' 與「回饋上限」換算 '+money(c.limB)+' 不一致，已用較嚴格者計算，請核對原表</div>';
+  if(pl>0){var q=CCR.plan(r,c,pl);h+=line('這筆 '+money(pl),'預計回饋 '+money(q.reward)+'（'+(q.rate*100).toFixed(1)+'%）','','plan');
+    if(q.over>0&&r.bonusRate>0)h+='<div class="ccr-note warn">這筆有 '+money(q.over)+' 超出加碼額度，該部分只享基本回饋</div>'}
+  return h;
+}
+function sumHtml(C){
+  var tot=0,cnt=0,sp=0;Object.keys(spent).forEach(function(k){var c=C[k];if(c&&c.spent>0){tot+=c.reward;sp+=c.spent;cnt++}});
+  if(!cnt)return '';
+  return '<div class="ccr-sum"><div><b>已花費合計 '+money(sp)+'</b><span>預估已得回饋 '+money(tot)+'（'+cnt+' 個方案）</span></div><button type="button" data-ccr-resetspent>清除已花費</button></div>';
+}
+function card(x,i,toks,C){
+  var r=x.r,top=i===0,isStore=r.type==='store';
+  var chan='<span class="ccr-tag '+(r.phys?'on':'off')+'">實體'+(r.phys?'適用':'不適用')+'</span><span class="ccr-tag '+(r.onl?'on':'off')+'">線上'+(r.onl?'適用':'不適用')+'</span>';
+  var tag=isStore?'<span class="ccr-tag store">指定店家</span>':'<span class="ccr-tag gen">通用</span>';
+  var stores=isStore
+    ?'<div class="ccr-stores"><div class="ccr-stores-t">📍 指定店家／通路（'+e(r.cat)+'）</div><div class="ccr-stores-b">'+hl(r.stores,toks)+'</div></div>'
+    :'<div class="ccr-stores gen"><div class="ccr-stores-t">🌐 不限店家（'+e(r.cat)+'）</div><div class="ccr-stores-b">'+e(r.stores)+'</div></div>';
+  var notes=(r.note?'<h4>注意事項</h4><p>'+e(r.note)+'</p>':'')+(r.flag?'<h4>資料提醒</h4><p>'+e(r.flag)+'</p>':'');
+  return '<article class="ccr-card'+(top?' top':'')+'">'
+   +'<div class="ccr-rank" aria-label="第'+(i+1)+'名">'+(i+1)+'</div>'
+   +'<div class="ccr-body"><div class="ccr-head"><div class="ccr-name"><strong>'+e(r.card)+'</strong><small>'+e([r.brand,r.plan].filter(Boolean).join('・'))+'</small></div>'
+   +'<div class="ccr-rate">'+e(CCR.pct(r.total))+'<small>'+(top?(x.byPlan?'🏆 這筆最多':'🏆 最高'):'總回饋')+'</small></div></div>'
+   +'<div class="ccr-tags">'+tag+chan+(r.sw&&r.sw!=='否'?'<span class="ccr-tag warn">'+e(r.sw)+'</span>':'')+(r.flag?'<span class="ccr-tag warn">資料不完整</span>':'')+'</div>'
+   +stores
+   +'<div class="ccr-calc"><label>已花費（台幣・'+e(r.cycle||'計算週期未標示')+'）<input type="number" inputmode="decimal" min="0" step="any" placeholder="0" data-ccr-spent="'+r.n+'" value="'+(spent[r.n]||'')+'"></label><div class="ccr-calc-out" data-ccr-out="'+r.n+'">'+calcOut(r,C[r.n])+'</div></div>'
+   +'<dl class="ccr-grid">'+cell('基本回饋',r.base)+cell('條件加碼',r.bonus)+cell('刷卡消費上限',r.cap)+cell('加碼回饋上限',r.bonusCap)+cell('計算週期',r.cycle)+cell('刷卡幣別',r.ccy)+cell('支付方式',r.pay)+cell('國外手續費',r.fee)+'</dl>'
+   +(notes?'<details class="ccr-more"><summary>注意事項</summary>'+notes+'</details>':'')
+   +'<p class="ccr-src">來源：Excel 第 '+r.n+' 列</p></div></article>';
+}
+function results(){
+  var res=CCR.search(ROWS,query,{type:fType,chan:fChan,exclude:fEx}),n=res.list.length,txt=String(query||'').trim(),msg;
+  var s=res.list.filter(function(x){return x.tag==='store'}).length,toks=CCR.tokens(query),C=CCR.calc(ROWS,spent),pl=num(plan);
+  if(sortBy==='plan'&&pl>0){res.list.forEach(function(x){x.byPlan=true;x.pr=CCR.plan(x.r,C[x.r.n],pl).reward});res.list.sort(function(a,b){return b.pr-a.pr||b.r.total-a.r.total||a.r.n-b.r.n})}
+  if(res.mode==='all')msg='全部方案共 '+n+' 筆，依總回饋由高到低排列。';
+  else if(res.mode==='channel')msg='符合通路條件共 '+n+' 筆，依總回饋由高到低排列。';
+  else if(res.mode==='card')msg='信用卡「'+txt+'」共 '+n+' 筆方案，依總回饋由高到低排列。';
+  else if(res.mode==='store')msg='「'+txt+'」找到 '+s+' 筆指定店家／通路方案，另有 '+(n-s)+' 筆可通用的方案，依總回饋由高到低排列。';
+  else if(res.mode==='generalHit')msg='「'+txt+'」符合 '+n+' 筆通用方案，依總回饋由高到低排列。';
+  else msg='查無「'+txt+'」的指定店家或通路加碼，以下是不限店家的通用方案，供參考。';
+  var f=[];
+  if(fType!=='all')f.push(fType==='store'?'只看指定店家':'只看通用（不限店家）');
+  if(fChan!=='all')f.push(fChan==='phys'?'僅實體':'僅線上');
+  if(String(fEx).trim())f.push('排除：'+String(fEx).trim());
+  if(f.length)msg+='（已篩選：'+f.join('、')+'）';
+  if(sortBy==='plan'&&pl>0)msg+='　排序：依這筆 '+money(pl)+' 預計回饋。';
+  return '<p class="ccr-msg'+(res.mode==='none'?' none':'')+'" role="status">'+e(msg)+'</p>'+(n?res.list.map(function(x,i){return card(x,i,toks,C)}).join(''):'<div class="empty">沒有符合的方案，換個關鍵字或放寬篩選試試。</div>');
+}
+function chipBtns(list,cur){return list.map(function(c){var k=c[1];return '<button type="button" class="ccr-chip'+(k===cur?' selected':'')+'" data-ccr-chip="'+e(k)+'">'+e(c[0])+'</button>'}).join('')}
+function seg(list,cur,attr){return list.map(function(c){return '<button type="button" class="'+(c[0]===cur?'selected':'')+'" '+attr+'="'+c[0]+'">'+e(c[1])+'</button>'}).join('')}
+function refreshCalc(){
+  var C=CCR.calc(ROWS,spent);
+  document.querySelectorAll('[data-ccr-out]').forEach(function(el){var r=byN(+el.dataset.ccrOut);if(r)el.innerHTML=calcOut(r,C[r.n])});
+  var s=document.getElementById('ccr-sum');if(s)s.innerHTML=sumHtml(C);
+}
+function sync(){
+  var sm=document.getElementById('ccr-sum');if(sm)sm.innerHTML=sumHtml(CCR.calc(ROWS,spent));
+  var so=document.getElementById('ccr-sort');if(so)so.innerHTML=seg([['rate','依回饋率'],['plan','依這筆預計回饋']],sortBy,'data-ccr-sort');
+  var box=document.getElementById('ccr-results');if(!box)return;
+  box.innerHTML=results();
+  var a=document.getElementById('ccr-cards');if(a)a.innerHTML=chipBtns(CARDS,query);
+  var b=document.getElementById('ccr-chips');if(b)b.innerHTML=chipBtns(CHIPS.map(function(c){return[c,c]}),query);
+  var t=document.getElementById('ccr-type');if(t)t.innerHTML=seg(TYPES,fType,'data-ccr-type');
+  var c=document.getElementById('ccr-chan');if(c)c.innerHTML=seg(CHANS,fChan,'data-ccr-chan');
+  var x=document.getElementById('ccr-clear');if(x)x.hidden=!query;
+}
+window.ccRewardsPage=function(){
+  return '<div class="page-title"><h2>💳 日本信用卡回饋查詢</h2></div>'
+  +'<section class="card ccr-box"><label class="field" for="ccr-q">輸入關鍵字（信用卡名稱、店家、商品、通路皆可）</label>'
+  +'<div class="ccr-input"><input id="ccr-q" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="例如：CUBE、實體、寶可夢、7-11" value="'+e(query)+'"><button type="button" id="ccr-clear" data-ccr-clear aria-label="清除關鍵字"'+(query?'':' hidden')+'>✕</button></div>'
+  +'<div class="ccr-fl"><b>信用卡</b><div class="ccr-chips" id="ccr-cards">'+chipBtns(CARDS,query)+'</div></div>'
+  +'<div class="ccr-fl"><b>常用</b><div class="ccr-chips" id="ccr-chips">'+chipBtns(CHIPS.map(function(c){return[c,c]}),query)+'</div></div>'
+  +'<div class="ccr-filters"><div class="ccr-fl"><b>顯示</b><div class="segmented" id="ccr-type">'+seg(TYPES,fType,'data-ccr-type')+'</div></div>'
+  +'<div class="ccr-fl"><b>通路</b><div class="segmented" id="ccr-chan">'+seg(CHANS,fChan,'data-ccr-chan')+'</div></div>'
+  +'<div class="ccr-fl"><b>排除</b><input id="ccr-ex" type="text" class="ccr-ex" autocomplete="off" spellcheck="false" placeholder="要排除的關鍵字，例如：UNIQLO 餐廳" value="'+e(fEx)+'"></div></div>'
+  +'<div class="ccr-filters"><div class="ccr-fl"><b>這筆</b><input id="ccr-plan" type="number" inputmode="decimal" min="0" step="any" class="ccr-ex" placeholder="預計消費金額（台幣，選填）" value="'+e(plan)+'"></div>'
+  +'<div class="ccr-fl"><b>匯率</b><input id="ccr-fx" type="number" inputmode="decimal" min="0" step="any" class="ccr-ex" placeholder="1 日圓＝幾台幣（選填，用來換算「尚可消費」的日幣）" value="'+e(fx)+'"></div>'
+  +'<div class="ccr-fl"><b>排序</b><div class="segmented" id="ccr-sort">'+seg([['rate','依回饋率'],['plan','依這筆預計回饋']],sortBy,'data-ccr-sort')+'</div></div></div>'
+  +'<p class="muted">想看「指定店家以外」的方案：選「只看通用（不限店家）」。要排除某個店家或通路：在「排除」欄輸入，含該店家的方案整列會被移除；輸入「線上」或「實體」則排除適用該通路的方案。卡片上的「已花費」請填台幣，會自動試算已得回饋與尚可消費，並存在這個瀏覽器；上限單位「點」以 1 點＝1 元計。試算未計手續費與各項條件，實際以銀行公告為準。</p></section>'
+  +'<div id="ccr-sum">'+sumHtml(CCR.calc(ROWS,spent))+'</div>'
+  +'<div id="ccr-results">'+results()+'</div>';
+};
+document.addEventListener('input',function(ev){var t=ev.target;if(!t||ev.isComposing)return;if(t.id==='ccr-q'){query=t.value;sync()}else if(t.id==='ccr-ex'){fEx=t.value;sync()}
+  else if(t.id==='ccr-plan'){plan=t.value;saveP();sync()}
+  else if(t.id==='ccr-fx'){fx=t.value;saveP();refreshCalc()}
+  else if(t.dataset&&t.dataset.ccrSpent){var v=num(t.value);if(v>0)spent[t.dataset.ccrSpent]=v;else delete spent[t.dataset.ccrSpent];saveS();refreshCalc()}});
+document.addEventListener('change',function(ev){var t=ev.target;if(t&&t.dataset&&t.dataset.ccrSpent&&sortBy==='plan'&&num(plan)>0)sync()});
+document.addEventListener('compositionend',function(ev){var t=ev.target;if(!t)return;if(t.id==='ccr-q'){query=t.value;sync()}else if(t.id==='ccr-ex'){fEx=t.value;sync()}});
+document.addEventListener('click',function(ev){
+  var b=ev.target.closest&&ev.target.closest('[data-ccr-chip],[data-ccr-clear],[data-ccr-type],[data-ccr-chan],[data-ccr-sort],[data-ccr-resetspent]');if(!b)return;
+  var input=document.getElementById('ccr-q');
+  if(b.hasAttribute('data-ccr-sort')){sortBy=b.dataset.ccrSort;sync();return}
+  if(b.hasAttribute('data-ccr-resetspent')){if(window.confirm('確定清除所有已花費金額？')){spent={};saveS();sync()}return}
+  if(b.hasAttribute('data-ccr-type')){fType=b.dataset.ccrType;sync();return}
+  if(b.hasAttribute('data-ccr-chan')){fChan=b.dataset.ccrChan;sync();return}
+  query=b.hasAttribute('data-ccr-clear')?'':(b.dataset.ccrChip===query?'':b.dataset.ccrChip);
+  if(input){input.value=query;if(b.hasAttribute('data-ccr-clear'))input.focus()}
+  sync();
 });
 })();
 </script>
